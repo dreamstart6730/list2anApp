@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 
-import Image from "next/image";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { Metadata } from "next";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
+// import Image from "next/image";
+// import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+// import { Metadata } from "next";
+// import DefaultLayout from "@/components/Layouts/DefaultLayout";
 
 // export const metadata: Metadata = {
 //   title: "Next.js SignIn Page | TailAdmin - Next.js Dashboard Template",
@@ -257,7 +257,7 @@ const SignIn: React.FC = () => {
                       className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
                     />
                   </div>
-
+                  {(message)?(message):("")}
                   <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50">
                     <span>
                       <svg

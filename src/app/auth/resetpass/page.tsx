@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import axios from 'axios';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
-import { jwtDecode } from "jwt-decode";
+// import { jwtDecode } from "jwt-decode";
 
-import Image from "next/image";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { Metadata } from "next";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
+// import Image from "next/image";
+// import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+// import { Metadata } from "next";
+// import DefaultLayout from "@/components/Layouts/DefaultLayout";
 
 // export const metadata: Metadata = {
 //   title: "Next.js SignIn Page | TailAdmin - Next.js Dashboard Template",
@@ -22,16 +22,16 @@ interface LoginResponse {
 
 const RestPass: React.FC = () => {
     const [email, setEmail] = useState<string>('');
-    const [message, setMessage] = useState<string>('');
+    // const [message, setMessage] = useState<string>('');
     const router = useRouter();
 
     const handleSendMessage = async () => {
         try {
-            const response = await axios.post<LoginResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/password-reset-request`, { email });
-            setMessage(response.data.message);
+            await axios.post<LoginResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/password-reset-request`, { email });
+            // setMessage(response.data.message);
             router.push("/auth/signin")
         } catch (error: any) {
-            setMessage(error.response?.data?.message || 'An error occurred.');
+            // setMessage(error.response?.data?.message || 'An error occurred.');
         }
     };
 
