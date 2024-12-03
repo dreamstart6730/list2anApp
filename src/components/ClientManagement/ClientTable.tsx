@@ -14,6 +14,14 @@ interface Client {
     requestCount: number;
     memo: string;
     updatedAt: Date;
+    user: User;
+}
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    contractId: string;
 }
 
 const ClientTable = () => {
@@ -21,17 +29,20 @@ const ClientTable = () => {
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [newClient, setNewClient] = useState({ name: "" });
+    const [newClient, setNewClient] = useState({ id: "" });
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [isReadOnly, setIsReadOnly] = useState(true);
+    const [selectedOption, setSelectedOption] = useState<string>("");
+    const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
 
     useEffect(() => {
         const fetchClients = async () => {
             try {
-                const response = await axios.get("http://localhost:3001/api/clients");
-                setClients(response.data);
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`);
+                setClients(response.data.clients);
+                setUsersWithoutContracts(response.data.usersWithoutContracts);
             } catch (error) {
-                console.error("Error fetching clients:", error);
+                console.log("Error fetching clients:", error);
             } finally {
                 setLoading(false);
             }
@@ -46,12 +57,12 @@ const ClientTable = () => {
 
     const handleAddClient = async () => {
         try {
-            const response = await axios.post("http://localhost:3001/api/add_client", newClient);
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/add_client`, newClient);
             setClients((prev) => [...prev, response.data]);
-            setNewClient({ name: "" });
+            setNewClient({ id: "" });
             setIsAddModalOpen(false);
         } catch (error) {
-            console.error("Error adding client:", error);
+            console.log("Error adding client:", error);
         }
     };
 
@@ -59,14 +70,14 @@ const ClientTable = () => {
         if (!selectedClient) return;
 
         try {
-            await axios.put(`http://localhost:3001/api/update_client/${selectedClient.id}`, selectedClient);
+            await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/update_client/${selectedClient.id}`, selectedClient);
             setClients((prev) =>
                 prev.map((client) => (client.id === selectedClient.id ? selectedClient : client))
             );
             setIsDetailModalOpen(false);
             setSelectedClient(null);
         } catch (error) {
-            console.error("Error updating client:", error);
+            console.log("Error updating client:", error);
         }
     };
 
@@ -106,7 +117,7 @@ const ClientTable = () => {
                                 <tr key={client.id}>
                                     <td className="border-b px-4 py-5 text-white">{index + 1}</td>
                                     <td className="border-b px-4 py-5 text-white">{client.contractId}</td>
-                                    <td className="border-b px-4 py-5 text-white">{client.name}</td>
+                                    <td className="border-b px-4 py-5 text-white">{client.user.name}</td>
                                     <td className="border-b px-4 py-5 text-white">{client.listCount}</td>
                                     <td className="border-b px-4 py-5 text-white">{client.requestCount}</td>
                                     <td className="border-b px-4 py-5 text-white">
@@ -139,12 +150,49 @@ const ClientTable = () => {
                 <div className="space-y-4">
                     <div>
                         <label className="block text-gray-700">クライアント名</label>
-                        <input
-                            type="text"
-                            value={newClient.name}
-                            onChange={(e) => setNewClient({ name: e.target.value })}
-                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                        />
+                        <div className="relative z-20 bg-gray-200">
+                            <select
+                                value={selectedOption}
+                                onChange={(e) => {
+                                    setSelectedOption(e.target.value);
+                                    setNewClient({ id: e.target.value })
+                                }}
+                                className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary text-gray-500}`}
+                            >
+                                <option key="user_select_0" value="" disabled className="text-body dark:text-bodydark">
+                                    ユーザーを選択してください。
+                                </option>
+                                {usersWithoutContracts.map((user, index) => (
+                                    <option
+                                        key={`user_select_${index}`}
+                                        value={user.id}
+                                        className="text-body dark:text-bodydark"
+                                    >
+                                        {user.name}___{user.email}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+                                <svg
+                                    className="fill-current"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <g opacity="0.8">
+                                        <path
+                                            fillRule="evenodd"
+                                            clipRule="evenodd"
+                                            d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
+                                            fill=""
+                                        ></path>
+                                    </g>
+                                </svg>
+                            </span>
+                        </div>
                     </div>
                     <div className="flex justify-end">
                         <button
@@ -171,7 +219,7 @@ const ClientTable = () => {
                             <label className="block text-gray-700">契約ID</label>
                             <input
                                 type="text"
-                                value={selectedClient.contractId}
+                                value={selectedClient.user.contractId}
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
                                 readOnly
                             />
@@ -180,7 +228,7 @@ const ClientTable = () => {
                             <label className="block text-gray-700">契約アドレス</label>
                             <input
                                 type="text"
-                                value={selectedClient.contactAddress}
+                                value={selectedClient.user.email}
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
                                 readOnly
                             />
@@ -189,9 +237,19 @@ const ClientTable = () => {
                             <label className="block text-gray-700">クライアント名</label>
                             <input
                                 type="text"
-                                value={selectedClient.name}
+                                value={selectedClient.user.name}
                                 onChange={(e) =>
-                                    setSelectedClient((prev) => ({ ...prev, name: e.target.value } as Client))
+                                    // setSelectedClient((prev) => ({ ...prev, {
+                                    //     ...prev.user: {
+                                    //         name: e.target.value }
+                                    //      } as Client))
+                                         setSelectedClient((prev) => ({
+                                            ...prev,
+                                            user: {
+                                                ...prev?.user, // Copy existing `user` properties
+                                                name: e.target.value, // Update only `name`
+                                            },
+                                        }) as Client)
                                 }
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
                                 readOnly={isReadOnly}

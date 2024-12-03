@@ -1,8 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import AuthGuard from "@/components/AuthGuard";
+import { isTokenValid } from "@/utils/TokenValidation";
+import { useRouter } from "next/navigation";
 
 export default function DefaultLayout({
   children,
@@ -10,6 +12,15 @@ export default function DefaultLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  useEffect(() => {
+    const token = localStorage.getItem('listan_token');
+    if (!token || !isTokenValid(token)) {
+      console.log('Token is invalid or expired. Redirecting to sign-in...');
+      localStorage.removeItem('listan_token'); // Clear invalid token
+      router.push('/auth/signin'); // Redirect to sign-in page
+    }
+  }, [router]);
   return (
     <>
       <AuthGuard>

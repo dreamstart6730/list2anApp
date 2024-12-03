@@ -1,18 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ClickOutside from "@/components/ClickOutside";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+
+interface User {
+  id: number;
+  contractId: string;
+  name: string;
+  email: string;
+  listCount: number;
+  requestCount: number;
+  createdAt: Date;
+  role: number;
+}
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [user, setUser] = useState<User>()
   const router = useRouter();
   const handleLogout = () => {
     localStorage.removeItem("listan_token");
 
     // Redirect to the login page
     router.push("/auth/signin");
-};
+  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("listan_token");
+      if (!token) {
+        console.error("Token not found.");
+ 
+        return;
+      }
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/user`, {
+          headers: { Authorization: `Bearer ${token}` }, // Add token to the header
+        });
+        setUser(response.data);
+      } catch (error) {
+        console.log("Error fetching clients:", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -23,9 +55,19 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-white">
-            高橋秀夫
+            {user?.name}
           </span>
-          <span className="block text-xs">開発者</span>
+          
+            {(user?.role == 1)?(
+              <span className="block text-xs">
+              管理者
+              </span>
+            ):(
+              <span className="block text-xs">
+              ユーザー
+              </span>
+            )}
+          
         </span>
 
         <span className="h-12 w-12 rounded-full">
@@ -137,7 +179,7 @@ const DropdownUser = () => {
             </li>
           </ul> */}
           <button className="flex items-center gap-3.5 px-2 py-4 text-sm font-medium duration-300 ease-in-out bg-slate-900 hover:text-primary text-sm lg:text-base"
-          onClick={handleLogout}
+            onClick={handleLogout}
           >
             <svg
               className="fill-current"
