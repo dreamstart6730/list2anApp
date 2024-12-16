@@ -92,7 +92,6 @@ const ListRequestTable = () => {
                 return;
             }
 
-            // Send updated data to the backend
             const response = await axios.put(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/update_request/${selectedList.id}`,
                 selectedList,

@@ -1,7 +1,4 @@
-import useColorMode from "@/hooks/useColorMode";
-
 const DarkModeSwitcher = () => {
-  const [colorMode, setColorMode] = useColorMode();
 
   return (
     <li>
@@ -10,11 +7,6 @@ const DarkModeSwitcher = () => {
       >
         <input
           type="checkbox"
-          onChange={() => {
-            if (typeof setColorMode === "function") {
-              setColorMode(colorMode === "light" ? "dark" : "light");
-            }
-          }}
           className="dur absolute top-0 z-50 m-0 h-full w-full cursor-pointer opacity-0"
         />
         <span
