@@ -89,7 +89,7 @@ const FormLayout = () => {
                                 <input
                                     type="text"
                                     placeholder=""
-                                    value={user?.contractId}
+                                    value={(user?.contractId)? user?.contractId : " " }
                                     className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
                                     readOnly
                                 />

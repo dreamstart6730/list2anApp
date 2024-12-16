@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import ClientDefaultLayout from "@/components/Layouts/ClientDefaultLayout";
 
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import ListRequestTable from "@/components/ListRequest/ListRequestTable";
+import NewRequest from "@/components/NewRequest/NewRequest";
 
 export const metadata: Metadata = {
     title:
@@ -14,8 +14,8 @@ export default function Home() {
     return (
         <>
             <ClientDefaultLayout>
-                <Breadcrumb pageName="リスト依頼" />
-                <ListRequestTable />
+                <Breadcrumb pageName="新規依頼" />
+                <NewRequest />
             </ClientDefaultLayout>
         </>
     );

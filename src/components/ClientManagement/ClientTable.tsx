@@ -58,7 +58,7 @@ const ClientTable = () => {
     const handleAddClient = async () => {
         try {
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/add_client`, newClient);
-            setClients((prev) => [...prev, response.data]);
+            setClients(response.data.clients);
             setNewClient({ id: "" });
             setIsAddModalOpen(false);
         } catch (error) {
@@ -117,7 +117,7 @@ const ClientTable = () => {
                                 <tr key={client.id}>
                                     <td className="border-b px-4 py-5 text-white">{index + 1}</td>
                                     <td className="border-b px-4 py-5 text-white">{client.contractId}</td>
-                                    <td className="border-b px-4 py-5 text-white">{client.user.name}</td>
+                                    <td className="border-b px-4 py-5 text-white">{(client.user)?client.user.name: ""}</td>
                                     <td className="border-b px-4 py-5 text-white">{client.listCount}</td>
                                     <td className="border-b px-4 py-5 text-white">{client.requestCount}</td>
                                     <td className="border-b px-4 py-5 text-white">
@@ -157,16 +157,16 @@ const ClientTable = () => {
                                     setSelectedOption(e.target.value);
                                     setNewClient({ id: e.target.value })
                                 }}
-                                className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary text-gray-500}`}
+                                className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary text-gray-900"
                             >
-                                <option key="user_select_0" value="" disabled className="text-body dark:text-bodydark">
+                                <option key="user_select_0" value="" disabled className="text-body text-gray-900">
                                     ユーザーを選択してください。
                                 </option>
                                 {usersWithoutContracts.map((user, index) => (
                                     <option
                                         key={`user_select_${index}`}
                                         value={user.id}
-                                        className="text-body dark:text-bodydark"
+                                        className="text-body text-black"
                                     >
                                         {user.name}___{user.email}
                                     </option>
