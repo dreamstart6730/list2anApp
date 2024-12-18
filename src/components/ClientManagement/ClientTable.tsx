@@ -28,12 +28,16 @@ const ClientTable = () => {
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isAddModalOpen2, setIsAddModalOpen2] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [newClient, setNewClient] = useState({ id: "" });
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [isReadOnly, setIsReadOnly] = useState(true);
     const [selectedOption, setSelectedOption] = useState<string>("");
     const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
+    const [newUserName, setNewUserName] = useState("");
+    const [newUserEmail, setNewUserEmail] = useState("");
+    const [newUserPass, setNewUserPass] = useState("listanpass");
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -66,6 +70,19 @@ const ClientTable = () => {
         }
     };
 
+    const handleMakeClient = async () => {
+        try {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/make_client`, {user_name: newUserName, user_email: newUserEmail, user_pass:newUserPass});
+            setClients(response.data.clients);
+            setNewUserName("");
+            setNewUserEmail("");
+            setNewUserPass("listanpass");
+            setIsAddModalOpen(false);
+        } catch (error) {
+            console.log("Error adding client:", error);
+        }
+    };
+
     const handleSaveSelectedClient = async () => {
         if (!selectedClient) return;
 
@@ -91,36 +108,42 @@ const ClientTable = () => {
     }
 
     return (
-        <>
+        <div className="bg-white px-4 py-8">
             <button
                 className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 onClick={() => setIsAddModalOpen(true)}
             >
                 新規登録
             </button>
-            <div className="rounded-sm border mx-4 px-6 pb-2.5 pt-6 shadow-default bg-slate-900 border-strokedark sm:px-8 xl:pb-1">
+            <button
+                className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                onClick={() => setIsAddModalOpen2(true)}
+            >
+                新規作成
+            </button>
+            <div className="rounded-sm border border-stroke px-5 pb-2.5 pt-6 shadow-default sm:px-7.5 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">
                         <thead>
-                            <tr className="bg-gray-2 text-left">
-                                <th className="min-w-[40px] px-4 py-4 font-medium text-white">No</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-white">契約ID</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-white">クライアント名</th>
-                                <th className="min-w-[120px] px-4 py-4 font-medium text-white">合計リスト数</th>
-                                <th className="px-4 py-4 font-medium text-white">合計依頼数</th>
-                                <th className="px-4 py-4 font-medium text-white">更新日</th>
-                                <th className="px-4 py-4 font-medium text-white"></th>
+                            <tr className="bg-gray-300 text-left">
+                                <th className="min-w-[40px] px-4 py-4 font-medium text-black">No</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">契約ID</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">クライアント名</th>
+                                <th className="min-w-[120px] px-4 py-4 font-medium text-black">合計リスト数</th>
+                                <th className="px-4 py-4 font-medium text-black">合計依頼数</th>
+                                <th className="px-4 py-4 font-medium text-black">更新日</th>
+                                <th className="px-4 py-4 font-medium text-black"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {clients.map((client, index) => (
                                 <tr key={client.id}>
-                                    <td className="border-b px-4 py-5 text-white">{index + 1}</td>
-                                    <td className="border-b px-4 py-5 text-white">{client.contractId}</td>
-                                    <td className="border-b px-4 py-5 text-white">{(client.user)?client.user.name: ""}</td>
-                                    <td className="border-b px-4 py-5 text-white">{client.listCount}</td>
-                                    <td className="border-b px-4 py-5 text-white">{client.requestCount}</td>
-                                    <td className="border-b px-4 py-5 text-white">
+                                    <td className="border-b border-[#eee] px-4 py-5">{index + 1}</td>
+                                    <td className="border-b border-[#eee] px-4 py-5">{client.contractId}</td>
+                                    <td className="border-b border-[#eee] px-4 py-5">{(client.user) ? client.user.name : ""}</td>
+                                    <td className="border-b border-[#eee] px-4 py-5">{client.listCount}</td>
+                                    <td className="border-b border-[#eee] px-4 py-5">{client.requestCount}</td>
+                                    <td className="border-b border-[#eee] px-4 py-5">
                                         {client.updatedAt
                                             ? new Intl.DateTimeFormat("ja-JP", {
                                                 year: "numeric",
@@ -204,6 +227,47 @@ const ClientTable = () => {
                     </div>
                 </div>
             </Modal>
+            {/* Add Client Modal2 */}
+            <Modal isOpen={isAddModalOpen2} onClose={() => setIsAddModalOpen2(false)}>
+                <h2 className="text-lg font-bold mb-4 text-gray-700">新規クライアント登録</h2>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-gray-700">クライアント名</label>
+                        <input
+                                type="text"
+                                value={newUserName}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                onChange={(e) => {setNewUserName(e.target.value)}}
+                            />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700">メールアドレス</label>
+                        <input
+                                type="email"
+                                value={newUserEmail}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                onChange={(e) => {setNewUserEmail(e.target.value)}}
+                            />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700">パスワード</label>
+                        <input
+                                type="text"
+                                value={newUserPass}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                onChange={(e) => {setNewUserPass(e.target.value)}}
+                            />
+                    </div>
+                    <div className="flex justify-end">
+                        <button
+                            onClick={handleMakeClient}
+                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        >
+                            登録する
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Detail Modal */}
             {selectedClient && (
@@ -243,13 +307,13 @@ const ClientTable = () => {
                                     //     ...prev.user: {
                                     //         name: e.target.value }
                                     //      } as Client))
-                                         setSelectedClient((prev) => ({
-                                            ...prev,
-                                            user: {
-                                                ...prev?.user, // Copy existing `user` properties
-                                                name: e.target.value, // Update only `name`
-                                            },
-                                        }) as Client)
+                                    setSelectedClient((prev) => ({
+                                        ...prev,
+                                        user: {
+                                            ...prev?.user, // Copy existing `user` properties
+                                            name: e.target.value, // Update only `name`
+                                        },
+                                    }) as Client)
                                 }
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
                                 readOnly={isReadOnly}
@@ -303,7 +367,7 @@ const ClientTable = () => {
                     </div>
                 </DetailModal>
             )}
-        </>
+        </div>
     );
 };
 

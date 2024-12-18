@@ -135,11 +135,11 @@ const NewRequest: React.FC = () => {
     }
 
     return (
-        <div className="rounded-sm border border-stroke shadow-default bg-slate-900 p-4">
+        <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
                 <div className="my-4">
-                    <label htmlFor="project_name" className="block mb-2 text-base font-medium text-gray-900 text-white">プロジェクト名</label>
-                    <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名</label>
+                    <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => { setProjectName(e.target.value) }}
                         value={projectName}
                         required />
@@ -147,11 +147,11 @@ const NewRequest: React.FC = () => {
             </div>
             {datasets.map((dataset, datasetIndex) => (
                 <div key={datasetIndex}>
-                    <h2 className="text-lg font-semibold text-white mb-4">{(dataset.name === "main_condition")?"業種の絞込み" : "その他条件の絞込み"}</h2>
+                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition")?"業種の絞込み" : "その他条件の絞込み"}</h2>
                     <table className="w-full border-collapse border border-gray-700">
                         <tbody>
                             {dataset.data.map((item: RequestGroup, index: number) => (
-                                <tr key={index} className="even:bg-gray-800 odd:bg-gray-700 text-white">
+                                <tr key={index} className="even:bg-white odd:bg-gray-200 text-black">
                                     <td className="border border-gray-700 p-2 align-top min-w-16">
                                         <div className="flex items-center">
                                             <input
@@ -204,15 +204,15 @@ const NewRequest: React.FC = () => {
             ))}
             <div>
                 <div className="my-4">
-                    <label htmlFor="area_selection" className="block mb-2 text-base font-medium text-gray-900 text-white">エリアの絞り込み</label>
-                    <input type="text" id="area_selection" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                    <label htmlFor="area_selection" className="block mb-2 text-base font-medium text-black">エリアの絞り込み</label>
+                    <input type="text" id="area_selection" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                         onChange={(e) => { setAreaSelection(e.target.value) }}
                         value={areaSelection}
                         required />
                 </div>
                 <div className="my-4">
-                    <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-gray-900 text-white">その他備考</label>
-                    <input type="text" id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                    <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">その他備考</label>
+                    <input type="text" id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                         onChange={(e) => { setAreaMemo(e.target.value) }}
                         value={areaMemo}
                         required />
@@ -236,12 +236,12 @@ const NewRequest: React.FC = () => {
                 </button>
             </div>
             <LargeModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
-                <div className="space-y-4 w-full text-white">
+                <div className="space-y-4 w-full text-black">
                     <div>
-                        <div className="relative z-20 bg-gray-500 border-gray-300">
+                        <div className="relative z-20 bg-white border-gray-300">
                             <div className="my-4">
-                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-white">エリアの絞り込み</label>
-                                <input type="text" id="project_name_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">エリアの絞り込み</label>
+                                <input type="text" id="project_name_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-white border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     onChange={(e) => { setProjectName(e.target.value) }}
                                     value={projectName}
                                     required
@@ -249,24 +249,24 @@ const NewRequest: React.FC = () => {
                                 />
                             </div>
                             <div className="my-4">
-                                <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-900 text-white">業種の絞込み</label>
-                                <textarea id="main_condition_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                                <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">業種の絞込み</label>
+                                <textarea id="main_condition_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-white border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     value={mainCondition}
                                     required
                                     readOnly
                                 />
                             </div>
                             <div className="my-4">
-                                <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-900 text-white">その他条件の絞込み</label>
-                                <textarea id="sub_condition_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                                <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">その他条件の絞込み</label>
+                                <textarea id="sub_condition_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-white border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     value={subCondition}
                                     required
                                     readOnly
                                 />
                             </div>
                             <div className="my-4">
-                                <label htmlFor="area_selection_confirm" className="block mb-2 text-base font-medium text-gray-900 text-white">エリアの絞り込み</label>
-                                <input type="text" id="area_selection_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                                <label htmlFor="area_selection_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">エリアの絞り込み</label>
+                                <input type="text" id="area_selection_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-white border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     onChange={(e) => { setAreaSelection(e.target.value) }}
                                     value={areaSelection}
                                     required
@@ -274,8 +274,8 @@ const NewRequest: React.FC = () => {
                                 />
                             </div>
                             <div className="my-4">
-                                <label htmlFor="area_memo_confirm" className="block mb-2 text-base font-medium text-gray-900 text-white">その他備考</label>
-                                <input type="text" id="area_memo_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+                                <label htmlFor="area_memo_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">その他備考</label>
+                                <input type="text" id="area_memo_confirm" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-white border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     onChange={(e) => { setAreaMemo(e.target.value) }}
                                     value={areaMemo}
                                     required

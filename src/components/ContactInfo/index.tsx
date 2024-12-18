@@ -75,27 +75,27 @@ const FormLayout = () => {
             <div className="grid grid-cols-1 gap-9 sm:grid-cols-2">
                 <div className="flex flex-col gap-9">
                     {/* <!-- Contact Form --> */}
-                    <div className="rounded-sm border shadow-default border-gray-500 bg-slate-900">
+                    <div className="rounded-sm border shadow-default border-gray-500 bg-white">
                         <div className="border-b border-stroke px-6 py-4  border-gray-400">
-                            <h3 className="font-medium text-white">
+                            <h3 className="font-medium text-black">
                                 契約情報
                             </h3>
                         </div>
                         <div className="p-6">
                             <div className="mb-4">
-                                <label className="mb-3 block text-sm font-medium text-white">
+                                <label className="mb-3 block text-sm font-medium text-black">
                                     契約ID
                                 </label>
                                 <input
                                     type="text"
                                     placeholder=""
                                     value={(user?.contractId)? user?.contractId : " " }
-                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
+                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
                                     readOnly
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="mb-3 block text-sm font-medium text-white">
+                                <label className="mb-3 block text-sm font-medium text-black">
                                     利用開始日
                                 </label>
                                 <input
@@ -108,24 +108,24 @@ const FormLayout = () => {
                                             day: "numeric",
                                         }).format(new Date(user?.createdAt))
                                         : "N/A"}
-                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
+                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
                                     readOnly
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="mb-3 block text-sm font-medium text-white">
+                                <label className="mb-3 block text-sm font-medium text-black">
                                     契約メールアドレス <span className="text-meta-1">*</span>
                                 </label>
                                 <input
                                     type="email"
                                     placeholder=""
                                     value={user?.email}
-                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
+                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
                                     readOnly
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="mb-3 block text-sm font-medium text-white">
+                                <label className="mb-3 block text-sm font-medium text-black">
                                     パスワード <span className="text-meta-1">*</span>
                                 </label>
                                 {(isReadOnly) ? (
@@ -133,7 +133,7 @@ const FormLayout = () => {
                                         <input
                                             type="password"
                                             placeholder="●●●●●●●●●●●"
-                                            className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
+                                            className="w-full max-w-[330px] rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
                                             readOnly={isReadOnly}
                                         />
                                         <span>
@@ -150,7 +150,7 @@ const FormLayout = () => {
                                         <input
                                             type="password"
                                             placeholder=""
-                                            className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
+                                            className="w-full max-w-[300px] rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
                                             onChange={(e) => {
                                                 setChangePass(e.target.value)
                                             }}
@@ -158,7 +158,7 @@ const FormLayout = () => {
                                         />
                                         <span>
                                             <button
-                                                className="ml-4 w-16 h-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                                                className="ml-4 w-20 h-full bg-green-500 text-white px-2 py-2 rounded hover:bg-green-600"
                                                 onClick={(e) => {
                                                     handleChangeFlag(false);
                                                     handleSavePassword();
@@ -167,7 +167,7 @@ const FormLayout = () => {
                                                 保存
                                             </button>
                                             <button
-                                                className="ml-4 w-16 h-full bg-pink-800 text-white px-4 py-2 rounded hover:bg-pink-900"
+                                                className="ml-4 w-20 h-full bg-pink-800 text-white px-2 py-2 rounded hover:bg-pink-900"
                                                 onClick={() => {
                                                     handleChangeFlag(false);
                                                 }}
@@ -180,24 +180,24 @@ const FormLayout = () => {
 
                             </div>
                             <div className="mb-4">
-                                <label className="mb-3 block text-sm font-medium text-white">
+                                <label className="mb-3 block text-sm font-medium text-black">
                                     合計リスト数
                                 </label>
                                 <input
                                     type="number"
                                     placeholder=""
-                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
+                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
                                     readOnly
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="mb-3 block text-sm font-medium text-white">
+                                <label className="mb-3 block text-sm font-medium text-black">
                                     合計依頼数
                                 </label>
                                 <input
                                     type="number"
                                     placeholder=""
-                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter text-white focus:border-primary"
+                                    className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
                                     readOnly
                                 />
                             </div>

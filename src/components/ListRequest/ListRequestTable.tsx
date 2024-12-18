@@ -145,29 +145,29 @@ const ListRequestTable = () => {
                     新規依頼
                 </a>
             </div>
-            <div className="rounded-sm border mx-4 px-6 pb-2.5 pt-6 shadow-default bg-slate-900 border-strokedark sm:px-8 xl:pb-1">
+            <div className="rounded-sm border border-gray-500 mx-4 px-6 pb-2.5 pt-6 shadow-default bg-white sm:px-8 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">
                         <thead>
                             <tr className="bg-gray-2 text-left">
-                                <th className="min-w-[40px] px-4 py-4 font-medium text-white">No</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-white">依頼ID</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-white">プロジェクト名</th>
-                                <th className="min-w-[120px] px-4 py-4 font-medium text-white">リスト数</th>
-                                <th className="px-4 py-4 font-medium text-white">状況</th>
-                                <th className="px-4 py-4 font-medium text-white">更新日</th>
-                                <th className="px-4 py-4 font-medium text-white"></th>
+                                <th className="min-w-[40px] px-4 py-4 font-medium text-black">No</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">依頼ID</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">プロジェクト名</th>
+                                <th className="min-w-[120px] px-4 py-4 font-medium text-black">リスト数</th>
+                                <th className="px-4 py-4 font-medium text-black">状況</th>
+                                <th className="px-4 py-4 font-medium text-black">更新日</th>
+                                <th className="px-4 py-4 font-medium text-black"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {requestLists.map((requestList, index) => (
                                 <tr key={requestList.id}>
-                                    <td className="border-b px-4 py-5 text-white">{index + 1}</td>
-                                    <td className="border-b px-4 py-5 text-white">{requestList.requestRandId}</td>
-                                    <td className="border-b px-4 py-5 text-white">{requestList.projectName}</td>
-                                    <td className="border-b px-4 py-5 text-white">{0}</td>
-                                    <td className="border-b px-4 py-5 text-white">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
-                                    <td className="border-b px-4 py-5 text-white">
+                                    <td className="border-b px-4 py-5 text-black">{index + 1}</td>
+                                    <td className="border-b px-4 py-5 text-black">{requestList.requestRandId}</td>
+                                    <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
+                                    <td className="border-b px-4 py-5 text-black">{0}</td>
+                                    <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
+                                    <td className="border-b px-4 py-5 text-black">
                                         {requestList.createdAt
                                             ? new Intl.DateTimeFormat("ja-JP", {
                                                 year: "numeric",
