@@ -22,6 +22,7 @@ const DropdownUser = () => {
   const router = useRouter();
   const handleLogout = () => {
     localStorage.removeItem("listan_token");
+    localStorage.removeItem("user_name");
 
     // Redirect to the login page
     router.push("/auth/signin");

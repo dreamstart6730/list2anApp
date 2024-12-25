@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import ClientTable from "@/components/ClientManagement/ClientTable";
+import ListDeliveryTable from "@/components/ListDelivery/ListDelivery";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export const metadata: Metadata = {
@@ -14,9 +14,7 @@ export default function Home() {
         <>
             <DefaultLayout>
                 <Breadcrumb pageName="リスト納品" />
-                <div>
-
-                </div>
+                <ListDeliveryTable />
             </DefaultLayout>
         </>
     );

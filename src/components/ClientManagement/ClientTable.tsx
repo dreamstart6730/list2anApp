@@ -22,7 +22,27 @@ interface User {
     name: string;
     email: string;
     contractId: string;
+    requests: RequestList[];
 }
+
+interface RequestList {
+    id: number;
+    requestRandId: string;
+    projectName: string;
+    completeState: number;
+    areaSelection: string;
+    areaMemo: string
+    mainCondition: Record<string, any>;
+    subCondition: Record<string, any>;
+    createdAt: Date;
+    updatedAt: Date;
+    filePath: string;
+    fileName: string;
+    listCount: number;
+    user: User;
+}
+
+
 
 const ClientTable = () => {
     const [clients, setClients] = useState<Client[]>([]);
@@ -37,7 +57,6 @@ const ClientTable = () => {
     const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
     const [newUserName, setNewUserName] = useState("");
     const [newUserEmail, setNewUserEmail] = useState("");
-    const [newUserPass, setNewUserPass] = useState("listanpass");
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -72,12 +91,11 @@ const ClientTable = () => {
 
     const handleMakeClient = async () => {
         try {
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/make_client`, {user_name: newUserName, user_email: newUserEmail, user_pass:newUserPass});
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/make_client`, { user_name: newUserName, user_email: newUserEmail });
             setClients(response.data.clients);
             setNewUserName("");
             setNewUserEmail("");
-            setNewUserPass("listanpass");
-            setIsAddModalOpen(false);
+            setIsAddModalOpen2(false);
         } catch (error) {
             console.log("Error adding client:", error);
         }
@@ -109,17 +127,17 @@ const ClientTable = () => {
 
     return (
         <div className="bg-white px-4 py-8">
-            <button
+            {/* <button
                 className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 onClick={() => setIsAddModalOpen(true)}
             >
-                新規登録
-            </button>
+                新規登録2
+            </button> */}
             <button
                 className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 onClick={() => setIsAddModalOpen2(true)}
             >
-                新規作成
+                新規登録
             </button>
             <div className="rounded-sm border border-stroke px-5 pb-2.5 pt-6 shadow-default sm:px-7.5 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
@@ -136,32 +154,37 @@ const ClientTable = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {clients.map((client, index) => (
-                                <tr key={client.id}>
-                                    <td className="border-b border-[#eee] px-4 py-5">{index + 1}</td>
-                                    <td className="border-b border-[#eee] px-4 py-5">{client.contractId}</td>
-                                    <td className="border-b border-[#eee] px-4 py-5">{(client.user) ? client.user.name : ""}</td>
-                                    <td className="border-b border-[#eee] px-4 py-5">{client.listCount}</td>
-                                    <td className="border-b border-[#eee] px-4 py-5">{client.requestCount}</td>
-                                    <td className="border-b border-[#eee] px-4 py-5">
-                                        {client.updatedAt
-                                            ? new Intl.DateTimeFormat("ja-JP", {
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                            }).format(new Date(client.updatedAt))
-                                            : "N/A"}
-                                    </td>
-                                    <td className="border-b px-4 py-5 text-white">
-                                        <button
-                                            className="text-blue-500 hover:underline"
-                                            onClick={() => openDetailModal(client)}
-                                        >
-                                            詳細
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {clients.map((client, index) => {
+                                const countSum = client.user?.requests?.reduce((sum, item) => sum + item.listCount, 0) || 0;
+                                const count_requset = client.user?.requests?.length
+                                return (
+                                    <tr key={client.id}>
+                                        <td className="border-b border-[#eee] px-4 py-5">{index + 1}</td>
+                                        <td className="border-b border-[#eee] px-4 py-5">{client.contractId}</td>
+                                        <td className="border-b border-[#eee] px-4 py-5">{(client.user) ? client.user.name : ""}</td>
+                                        <td className="border-b border-[#eee] px-4 py-5">{countSum}</td>
+                                        <td className="border-b border-[#eee] px-4 py-5">{count_requset}</td>
+                                        <td className="border-b border-[#eee] px-4 py-5">
+                                            {client.updatedAt
+                                                ? new Intl.DateTimeFormat("ja-JP", {
+                                                    year: "numeric",
+                                                    month: "long",
+                                                    day: "numeric",
+                                                }).format(new Date(client.updatedAt))
+                                                : "N/A"}
+                                        </td>
+                                        <td className="border-b px-4 py-5 text-white">
+                                            <button
+                                                className="text-blue-500 hover:underline"
+                                                onClick={() => openDetailModal(client)}
+                                            >
+                                                詳細
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )
+                            }
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -234,29 +257,20 @@ const ClientTable = () => {
                     <div>
                         <label className="block text-gray-700">クライアント名</label>
                         <input
-                                type="text"
-                                value={newUserName}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                onChange={(e) => {setNewUserName(e.target.value)}}
-                            />
+                            type="text"
+                            value={newUserName}
+                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                            onChange={(e) => { setNewUserName(e.target.value) }}
+                        />
                     </div>
                     <div>
                         <label className="block text-gray-700">メールアドレス</label>
                         <input
-                                type="email"
-                                value={newUserEmail}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                onChange={(e) => {setNewUserEmail(e.target.value)}}
-                            />
-                    </div>
-                    <div>
-                        <label className="block text-gray-700">パスワード</label>
-                        <input
-                                type="text"
-                                value={newUserPass}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                onChange={(e) => {setNewUserPass(e.target.value)}}
-                            />
+                            type="email"
+                            value={newUserEmail}
+                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                            onChange={(e) => { setNewUserEmail(e.target.value) }}
+                        />
                     </div>
                     <div className="flex justify-end">
                         <button
@@ -276,97 +290,115 @@ const ClientTable = () => {
                     onClose={() => setIsDetailModalOpen(false)}
                     onSave={handleSaveSelectedClient}
                     onChangeFlag={handleChangeFlag}
+                    onDelete={() => {}}
+                    onDownloadList={() => {}}
+                    deleteFlag= {false}
+                    downloadFlag= {false}
                 >
-                    <h2 className="text-lg font-bold mb-4 text-gray-700">クライアント詳細</h2>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-gray-700">契約ID</label>
-                            <input
-                                type="text"
-                                value={selectedClient.user.contractId}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700">契約アドレス</label>
-                            <input
-                                type="text"
-                                value={selectedClient.user.email}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700">クライアント名</label>
-                            <input
-                                type="text"
-                                value={selectedClient.user.name}
-                                onChange={(e) =>
-                                    // setSelectedClient((prev) => ({ ...prev, {
-                                    //     ...prev.user: {
-                                    //         name: e.target.value }
-                                    //      } as Client))
-                                    setSelectedClient((prev) => ({
-                                        ...prev,
-                                        user: {
-                                            ...prev?.user, // Copy existing `user` properties
-                                            name: e.target.value, // Update only `name`
-                                        },
-                                    }) as Client)
-                                }
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly={isReadOnly}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700">リスト数</label>
-                            <input
-                                type="number"
-                                value={selectedClient.listCount}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700">依頼数</label>
-                            <input
-                                type="number"
-                                value={selectedClient.requestCount}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly
-                            />
-                        </div>
+                    {(() => {
+                        const countSum =
+                            selectedClient.user?.requests?.reduce((sum, item) => sum + item.listCount, 0) || 0;
+                        const count_request = selectedClient.user?.requests?.length || 0;
 
-                        <div>
-                            <label className="block text-gray-700">更新日</label>
-                            <input
-                                type="text"
-                                value={selectedClient.updatedAt
-                                    ? new Intl.DateTimeFormat("ja-JP", {
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                    }).format(new Date(selectedClient.updatedAt))
-                                    : "N/A"}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700">メモ</label>
-                            <textarea
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                onChange={(e) =>
-                                    setSelectedClient((prev) => ({ ...prev, memo: e.target.value } as Client))
-                                }
-                                value={selectedClient.memo || ""}
-                                readOnly={isReadOnly}
-                            />
-                        </div>
-                    </div>
+                        return (
+                            <>
+                                <h2 className="text-lg font-bold mb-4 text-gray-700">クライアント詳細</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-gray-700">契約ID</label>
+                                        <input
+                                            type="text"
+                                            value={selectedClient.user?.contractId || ""}
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">契約アドレス</label>
+                                        <input
+                                            type="text"
+                                            value={selectedClient.user?.email || ""}
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">クライアント名</label>
+                                        <input
+                                            type="text"
+                                            value={selectedClient.user?.name || ""}
+                                            onChange={(e) =>
+                                                setSelectedClient((prev) =>
+                                                    prev
+                                                        ? {
+                                                            ...prev,
+                                                            user: {
+                                                                ...prev.user,
+                                                                name: e.target.value,
+                                                            },
+                                                        }
+                                                        : null
+                                                )
+                                            }
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            readOnly={isReadOnly}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">リスト数</label>
+                                        <input
+                                            type="number"
+                                            value={countSum}
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">依頼数</label>
+                                        <input
+                                            type="number"
+                                            value={count_request}
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">更新日</label>
+                                        <input
+                                            type="text"
+                                            value={
+                                                selectedClient.updatedAt
+                                                    ? new Intl.DateTimeFormat("ja-JP", {
+                                                        year: "numeric",
+                                                        month: "long",
+                                                        day: "numeric",
+                                                    }).format(new Date(selectedClient.updatedAt))
+                                                    : "N/A"
+                                            }
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">メモ</label>
+                                        <textarea
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            onChange={(e) =>
+                                                setSelectedClient((prev) =>
+                                                    prev ? { ...prev, memo: e.target.value } : null
+                                                )
+                                            }
+                                            value={selectedClient.memo || ""}
+                                            readOnly={isReadOnly}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </DetailModal>
             )}
+
         </div>
     );
 };

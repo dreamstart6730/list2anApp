@@ -14,11 +14,11 @@ interface RequestList {
     areaMemo: string
     mainCondition: Record<string, any>;
     subCondition: Record<string, any>;
-    listCount: number;
-    fileName: string;
-    filePath: string;
     createdAt: Date;
     updatedAt: Date;
+    filePath: string;
+    fileName: string;
+    listCount: number;
     user: User;
 }
 
@@ -36,7 +36,7 @@ interface DecodedToken {
     role: number;
 }
 
-const ListRequestTable = () => {
+const ListDeliveryTable = () => {
     const [requestLists, setRequestLists] = useState<RequestList[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -46,6 +46,7 @@ const ListRequestTable = () => {
     const [isReadOnly, setIsReadOnly] = useState(true);
     const [selectedOption, setSelectedOption] = useState<string>("");
     const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -64,8 +65,8 @@ const ListRequestTable = () => {
                 return;
             }
             try {
-                const response = await axios.get(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/requestLists`,
+                const response = await axios.post(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/requestLists_mana`,
                     {
                         params: { userId }, // Pass userId as a query parameter
                         headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
@@ -81,6 +82,49 @@ const ListRequestTable = () => {
 
         fetchClients();
     }, []);
+
+    const handleFileSelection = (files: FileList | null) => {
+        if (files && files.length > 0) {
+            setSelectedFile(files[0]);
+        }
+    };
+
+    const handleFileUpload = async () => {
+        if (!selectedFile) {
+            alert("ファイルを選択してください。");
+            return;
+        }
+
+        if (!selectedList) {
+            alert("リストが選択されていません。");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("requestId", selectedList.id.toString());
+
+        try {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/upload-csv-file`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            alert(response.data.message);
+            const updatedRequest = response.data.updatedRequest;
+
+            // Update the selected list and request lists
+            setSelectedList((prev) => (prev && prev.id === updatedRequest.id ? updatedRequest : prev));
+            setRequestLists((prevRequests) =>
+                prevRequests.map((request) =>
+                    request.id === updatedRequest.id ? updatedRequest : request
+                )
+            );
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            alert("ファイルのアップロードに失敗しました。");
+        }
+    };
+
 
     const handleChangeFlag = (flag: boolean) => {
         setIsReadOnly(!flag); // Update read-only based on flag
@@ -135,74 +179,41 @@ const ListRequestTable = () => {
         setIsDetailModalOpen(true);
     };
 
-    const handleDeleteSelectedList = async () => {
-        if (!selectedList) return; // Ensure there's a selected list to save
+    // const handleFileUpload = async (files: FileList | null) => {
+    //     if (!files || files.length === 0) return;
 
-        try {
-            const token = localStorage.getItem("listan_token");
-            if (!token) {
-                console.log("No token found. Cannot update request.");
-                return;
-            }
+    //     const formData = new FormData();
+    //     formData.append('file', files[0]);
+    //     if (!selectedList) {
+    //         return;
+    //     }
+    //     formData.append('requestId', selectedList.id.toString());
 
-            const response = await axios.delete(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request/${selectedList.id}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // Include token for authentication
-                    },
-                }
-            );
+    //     try {
+    //         const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/upload-csv-file`, formData, {
+    //             headers: { 'Content-Type': 'multipart/form-data' },
+    //         });
+    //         alert(response.data.message);
+    //         const updatedRequest = response.data.updatedRequest;
+    //         setRequestLists((prevRequests) =>
+    //             prevRequests.map((request) =>
+    //                 request.id === selectedList.id ? response.data.updatedRequest
+    //                     : request
+    //             )
+    //         );
+    //         setSelectedList((prev) => (prev && prev.id === updatedRequest.id ? updatedRequest : prev));
 
-            if (response.status === 200) {
-                console.log("Request deleted successfully:", response.data);
-                alert("リクエストが削除されました。!");
-                setRequestLists((prevRequests) =>
-                    prevRequests.filter((request) => request.id !== selectedList.id)
-                );
-                setIsDetailModalOpen(false);
-            } else {
-                console.error("Failed to delete request:", response.statusText);
-                alert("リクエストの削除に失敗しました。");
-            }
-        } catch (error) {
-            console.error("Error deleting request:", error);
-            alert("リクエストの削除中にエラーが発生しました。");
-        }
-    }
-
-    const handleDownloadList = async () => {
-        if (!selectedList || !selectedList.filePath) {
-            alert("ダウンロード可能なファイルが見つかりません。");
-            return;
-        }
-    
-        try {
-            // Fetch the file as a blob from the server
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/${selectedList.filePath}`, {
-                responseType: 'blob',
-            });
-    
-            // Create a Blob URL for the file
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-    
-            // Create a temporary link element for downloading
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', selectedList.fileName || 'download.csv'); // Rename the file using `fileName`
-            
-            // Trigger the download
-            document.body.appendChild(link);
-            link.click();
-            
-            // Clean up the temporary link
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url); // Release the Blob URL
-        } catch (error) {
-            console.error("Error downloading the file:", error);
-            alert("ファイルのダウンロード中にエラーが発生しました。");
-        }
-    };
+    //         // Update the full requestLists array
+    //         setRequestLists((prevRequests) =>
+    //             prevRequests.map((request) =>
+    //                 request.id === updatedRequest.id ? updatedRequest : request
+    //             )
+    //         );
+    //     } catch (error) {
+    //         console.error('Error uploading file:', error);
+    //         alert('ファイルのアップロードに失敗しました。');
+    //     }
+    // };
 
     if (loading) {
         return <Loader />;
@@ -210,14 +221,14 @@ const ListRequestTable = () => {
 
     return (
         <>
-            <div className="my-4">
+            {/* <div className="my-4">
                 <a
                     className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                     href="/new_request"
                 >
                     新規依頼
                 </a>
-            </div>
+            </div> */}
             <div className="rounded-sm border border-gray-500 mx-4 px-6 pb-2.5 pt-6 shadow-default bg-white sm:px-8 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">
@@ -238,7 +249,7 @@ const ListRequestTable = () => {
                                     <td className="border-b px-4 py-5 text-black">{index + 1}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.requestRandId}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
-                                    <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
+                                    <td className="border-b px-4 py-5 text-black">{0}</td>
                                     <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
                                     <td className="border-b px-4 py-5 text-black">
                                         {requestList.createdAt
@@ -271,13 +282,22 @@ const ListRequestTable = () => {
                     onClose={() => setIsDetailModalOpen(false)}
                     onSave={handleSaveSelectedList}
                     onChangeFlag={handleChangeFlag}
-                    onDelete={handleDeleteSelectedList}
-                    deleteFlag={true}
-                    onDownloadList={()=>handleDownloadList()}
-                    downloadFlag = {(selectedList.completeState>1)}
+                    onDelete={() => { }}
+                    onDownloadList={() => { }}
+                    deleteFlag={false}
+                    downloadFlag={false}
                 >
                     <h2 className="text-lg font-bold mb-4 text-gray-700">リスト詳細</h2>
                     <div className="space-y-4">
+                        <div className="flex">
+                            <label className="block text-gray-700 min-w-40">クライアント名</label>
+                            <input
+                                type="text"
+                                value={selectedList.user.name}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                readOnly
+                            />
+                        </div>
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">依頼ID</label>
                             <input
@@ -380,7 +400,7 @@ const ListRequestTable = () => {
                             />
                         </div>
                         <div className="flex">
-                            <label className="block text-gray-700 min-w-40">納品日</label>
+                            <label className="block text-gray-700 min-w-40">更新日</label>
                             <input
                                 type="text"
                                 value={selectedList.createdAt
@@ -394,6 +414,41 @@ const ListRequestTable = () => {
                                 readOnly
                             />
                         </div>
+                        <div className="flex">
+                            <label className="block text-gray-700 min-w-40">ファイル名</label>
+                            <input
+                                type="text"
+                                value={selectedList.fileName}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                readOnly
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-4 flex justify-between">
+                        <div className="flex flex-col">
+                            <label className="block text-gray-700 text-sm">CSV アップロード</label>
+                            {/* Hidden File Input */}
+                            <input
+                                type="file"
+                                accept=".csv"
+                                id="fileInput"
+                                className="hidden"
+                                onChange={(e) => handleFileSelection(e.target.files)}
+                            />
+                            {/* Custom Button to Trigger File Dialog */}
+                            <button
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                onClick={() => document.getElementById("fileInput")?.click()}
+                            >
+                                {selectedFile ? selectedFile.name : "ファイルを選択"}
+                            </button>
+                        </div>
+                        <button
+                            className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                            onClick={handleFileUpload}
+                        >
+                            納品
+                        </button>
                     </div>
                 </DetailModal>
             )}
@@ -401,4 +456,4 @@ const ListRequestTable = () => {
     );
 };
 
-export default ListRequestTable;
+export default ListDeliveryTable;

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { requestGroupCheckData, requestGroupCheckData2 } from "@/constant/RequestGroup";
 import LargeModal from "../common/Loader/LargeModal";
 import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
 
 interface RequestGroup {
     category: string;
@@ -31,6 +32,7 @@ const NewRequest: React.FC = () => {
     const [projectName, setProjectName] = useState("");
     const [mainCondition, setMainCondition] = useState("");
     const [subCondition, setSubCondition] = useState("");
+    const router = useRouter();
 
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
@@ -124,6 +126,7 @@ const NewRequest: React.FC = () => {
                 const data = await response.json();
                 console.log('Request saved successfully:', data);
                 alert('正常に保存されました');
+                router.push("/list_request")
             } else {
                 console.error('Failed to save request:', response.statusText);
                 alert('保存に失敗しました');
