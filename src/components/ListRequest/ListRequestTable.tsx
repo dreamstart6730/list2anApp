@@ -3,14 +3,17 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Loader from "@/components/common/Loader";
 import DetailModal from "@/components/common/Loader/DetailModal";
+import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
+import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
 
 interface RequestList {
     id: number;
     requestRandId: string;
     projectName: string;
     completeState: number;
-    areaSelection: string;
+    areaSelection: Record<string, any>;
     areaMemo: string
     mainCondition: Record<string, any>;
     subCondition: Record<string, any>;
@@ -19,8 +22,16 @@ interface RequestList {
     filePath: string;
     createdAt: Date;
     updatedAt: Date;
+    requestAt: Date;
+    deliveryAt: Date;
     user: User;
 }
+
+interface RequestGroupCheckData {
+    category: string;
+    options: string[];
+}
+
 
 interface User {
     id: number;
@@ -46,7 +57,44 @@ const ListRequestTable = () => {
     const [isReadOnly, setIsReadOnly] = useState(true);
     const [selectedOption, setSelectedOption] = useState<string>("");
     const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
+    const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
+    const [currentCondition, setCurrentCondition] = useState("");
 
+
+    const transformData = (
+        input: Record<string, string[]>,
+        groupData: RequestGroupCheckData[],
+        condition_string: string
+    ): { checkedCategories: Record<string, boolean>; checkedItems: Record<string, Record<string, boolean>> } => {
+        const checkedCategories: Record<string, boolean> = {};
+        const checkedItems: Record<string, Record<string, boolean>> = {};
+
+        groupData.forEach((group) => {
+            const categoryKey = `${condition_string}-${group.category}`;
+            const selectedOptions = input[group.category] || [];
+
+            // Set checked status for categories
+            checkedCategories[categoryKey] = selectedOptions.length > 0;
+
+            // Set checked status for individual options
+            checkedItems[categoryKey] = group.options.reduce((acc, option) => {
+                acc[option] = selectedOptions.includes(option);
+                return acc;
+            }, {} as Record<string, boolean>);
+        });
+
+        return { checkedCategories, checkedItems };
+    };
+
+    // for (const [category, options] of Object.entries(groupData)) {
+    // //   result[`${condition_string}-${category}`] = true;
+    //     for (const option of options) {
+    //         result[`${option}`] = true;
+    //     }
+    // }
+
+    // return result;
+    //   };
     useEffect(() => {
         const fetchClients = async () => {
             const token = localStorage.getItem("listan_token");
@@ -72,6 +120,7 @@ const ListRequestTable = () => {
                     }
                 );
                 setRequestLists(response.data.requests);
+                console.log("Fetched clients:", response.data.requests);
             } catch (error) {
                 console.log("Error fetching clients:", error);
             } finally {
@@ -81,9 +130,12 @@ const ListRequestTable = () => {
 
         fetchClients();
     }, []);
-
+    const router = useRouter();
     const handleChangeFlag = (flag: boolean) => {
-        setIsReadOnly(!flag); // Update read-only based on flag
+        // setIsReadOnly(!flag); // Update read-only based on flag
+        if (selectedList?.id) {
+            router.push(`/request_change?requestId=${selectedList.id}`);
+        }
     };
 
     const handleSaveSelectedList = async () => {
@@ -176,25 +228,25 @@ const ListRequestTable = () => {
             alert("ダウンロード可能なファイルが見つかりません。");
             return;
         }
-    
+
         try {
             // Fetch the file as a blob from the server
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/${selectedList.filePath}`, {
                 responseType: 'blob',
             });
-    
+
             // Create a Blob URL for the file
             const url = window.URL.createObjectURL(new Blob([response.data]));
-    
+
             // Create a temporary link element for downloading
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', selectedList.fileName || 'download.csv'); // Rename the file using `fileName`
-            
+
             // Trigger the download
             document.body.appendChild(link);
             link.click();
-            
+
             // Clean up the temporary link
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url); // Release the Blob URL
@@ -241,12 +293,12 @@ const ListRequestTable = () => {
                                     <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
                                     <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
                                     <td className="border-b px-4 py-5 text-black">
-                                        {requestList.createdAt
+                                        {requestList.updatedAt
                                             ? new Intl.DateTimeFormat("ja-JP", {
                                                 year: "numeric",
                                                 month: "long",
                                                 day: "numeric",
-                                            }).format(new Date(requestList.createdAt))
+                                            }).format(new Date(requestList.updatedAt))
                                             : "N/A"}
                                     </td>
                                     <td className="border-b px-4 py-5 text-white">
@@ -272,9 +324,9 @@ const ListRequestTable = () => {
                     onSave={handleSaveSelectedList}
                     onChangeFlag={handleChangeFlag}
                     onDelete={handleDeleteSelectedList}
-                    deleteFlag={true}
-                    onDownloadList={()=>handleDownloadList()}
-                    downloadFlag = {(selectedList.completeState>1)}
+                    deleteFlag={(selectedList.completeState == 0)}
+                    onDownloadList={() => handleDownloadList()}
+                    downloadFlag={(selectedList.completeState > 1)}
                 >
                     <h2 className="text-lg font-bold mb-4 text-gray-700">リスト詳細</h2>
                     <div className="space-y-4">
@@ -283,7 +335,7 @@ const ListRequestTable = () => {
                             <input
                                 type="text"
                                 value={selectedList.requestRandId}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />
                         </div>
@@ -297,38 +349,79 @@ const ListRequestTable = () => {
                                         ...prev, projectName: e.target.value
                                     } as RequestList))
                                 }}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
                                 readOnly={isReadOnly}
                             />
                         </div>
                         <div>
-                            <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">業種の絞込み</label>
-                            <textarea id="main_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                            <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
+                            {/* <textarea id="main_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                                 value={JSON.stringify(selectedList.mainCondition, null, 2)}
                                 required
                                 readOnly
+                            /> */}
+                            <button
+                                onClick={() => {
+                                    setIsCheckBoxModalOpen(true)
+                                    setCurrentCondition("main_condition")
+                                }}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                データを表示
+                            </button>
+                            <GroupCheckBox
+                                isOpen={isCheckBoxModalOpen}
+                                onClose={() => setIsCheckBoxModalOpen(false)}
+                                dataset={{ name: "main_condition", data: requestGroupCheckData }}
+                                current_condition={currentCondition}
+                                checkedCategories={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedCategories}
+                                checkedItems={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedItems}
                             />
                         </div>
                         <div>
-                            <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">その他条件の絞込み</label>
-                            <textarea id="sub_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                            <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
+                            {/* <textarea id="sub_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                                 value={JSON.stringify(selectedList.subCondition, null, 2)}
                                 required
                                 readOnly
+                            /> */}
+                            <button
+                                onClick={() => {
+                                    setIsCheckBoxModalOpen(true)
+                                    setCurrentCondition("sub_condition")
+                                }}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                データを表示
+                            </button>
+                            <GroupCheckBox
+                                isOpen={isCheckBoxModalOpen}
+                                onClose={() => setIsCheckBoxModalOpen(false)}
+                                dataset={{ name: "sub_condition", data: requestGroupCheckData2 }}
+                                current_condition={currentCondition}
+                                checkedCategories={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedCategories}
+                                checkedItems={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedItems}
                             />
                         </div>
-                        <div className="flex">
+                        <div>
                             <label className="block text-gray-700 min-w-40">エリアの絞り込み</label>
-                            <input
-                                type="text"
-                                value={selectedList.areaSelection}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly={isReadOnly}
-                                onChange={(e) => {
-                                    setSelectedList((prev) => ({
-                                        ...prev, areaSelection: e.target.value
-                                    } as RequestList))
+                            <button
+                                onClick={() => {
+                                    setIsCheckBoxModalOpen(true)
+                                    setCurrentCondition("area_condition")
                                 }}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+
+                            >
+                                データを表示
+                            </button>
+                            <GroupCheckBox
+                                isOpen={isCheckBoxModalOpen}
+                                onClose={() => setIsCheckBoxModalOpen(false)}
+                                dataset={{ name: "area_condition", data: requestGroupCheckData3 }}
+                                current_condition={currentCondition}
+                                checkedCategories={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedCategories}
+                                checkedItems={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedItems}
                             />
                         </div>
                         <div className="flex">
@@ -336,7 +429,7 @@ const ListRequestTable = () => {
                             <input
                                 type="text"
                                 value={selectedList.areaMemo}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
                                 readOnly={isReadOnly}
                                 onChange={(e) => {
                                     setSelectedList((prev) => ({
@@ -350,7 +443,7 @@ const ListRequestTable = () => {
                             <input
                                 type="text"
                                 value={(selectedList.completeState > 0) ? ((selectedList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />
                         </div>
@@ -359,7 +452,7 @@ const ListRequestTable = () => {
                             <input
                                 type="number"
                                 value={selectedList.listCount}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />
                         </div>
@@ -368,14 +461,14 @@ const ListRequestTable = () => {
                             <label className="block text-gray-700 min-w-40">依頼日</label>
                             <input
                                 type="text"
-                                value={selectedList.createdAt
+                                value={(selectedList.requestAt) ? (selectedList.requestAt
                                     ? new Intl.DateTimeFormat("ja-JP", {
                                         year: "numeric",
                                         month: "long",
                                         day: "numeric",
-                                    }).format(new Date(selectedList.createdAt))
-                                    : "N/A"}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                    }).format(new Date(selectedList.requestAt))
+                                    : "N/A") : ""}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />
                         </div>
@@ -383,14 +476,14 @@ const ListRequestTable = () => {
                             <label className="block text-gray-700 min-w-40">納品日</label>
                             <input
                                 type="text"
-                                value={selectedList.createdAt
+                                value={(selectedList.deliveryAt) ? (selectedList.deliveryAt
                                     ? new Intl.DateTimeFormat("ja-JP", {
                                         year: "numeric",
                                         month: "long",
                                         day: "numeric",
-                                    }).format(new Date(selectedList.updatedAt))
-                                    : "N/A"}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                    }).format(new Date(selectedList.deliveryAt))
+                                    : "N/A") : ""}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />
                         </div>

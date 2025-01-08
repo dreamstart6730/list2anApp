@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
 import LargeModal from "../common/Loader/LargeModal";
 import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Loader from "../common/Loader";
 
 interface RequestGroup {
     category: string;
@@ -19,7 +21,33 @@ interface DecodedToken {
     role: number;
 }
 
-const NewRequest: React.FC = () => {
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    contractId: string;
+}
+
+interface RequestList {
+    id: number;
+    requestRandId: string;
+    projectName: string;
+    completeState: number;
+    areaSelection: Record<string, any>;
+    areaMemo: string
+    mainCondition: Record<string, any>;
+    subCondition: Record<string, any>;
+    listCount: number;
+    fileName: string;
+    filePath: string;
+    createdAt: Date;
+    updatedAt: Date;
+    requestAt: Date;
+    deliveryAt: Date;
+    user: User;
+}
+
+const ChangeRequest: React.FC = () => {
     const datasets = [
         { name: "main_condition", data: requestGroupCheckData },
         { name: "sub_condition", data: requestGroupCheckData2 },
@@ -34,10 +62,111 @@ const NewRequest: React.FC = () => {
     const [projectName, setProjectName] = useState("");
     const [mainCondition, setMainCondition] = useState("");
     const [subCondition, setSubCondition] = useState("");
+    const [currentRequest, setCurrentRequest] = useState<RequestList | null>(null);
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const requestId = searchParams.get('requestId');
+    const transformData = (
+        input: Record<string, string[]>,
+        groupData: RequestGroup[],
+        condition_string: string
+    ): { checkedCategories: Record<string, boolean>; checkedItems: Record<string, Record<string, boolean>> } => {
+        const checkedCategories: Record<string, boolean> = {};
+        const checkedItems: Record<string, Record<string, boolean>> = {};
 
+        groupData.forEach((group) => {
+            const categoryKey = `${condition_string}-${group.category}`;
+            const selectedOptions = input[group.category] || [];
+
+            // Set checked status for categories
+            checkedCategories[categoryKey] = selectedOptions.length > 0;
+
+            // Set checked status for individual options
+            checkedItems[categoryKey] = group.options.reduce((acc, option) => {
+                acc[option] = selectedOptions.includes(option);
+                return acc;
+            }, {} as Record<string, boolean>);
+        });
+
+        return { checkedCategories, checkedItems };
+    };
+    useEffect(() => {
+        const fetchClients = async () => {
+            const token = localStorage.getItem("listan_token");
+            if (!token) {
+                console.log("No token found. Redirecting to login...");
+                return;
+            }
+
+            const decodedToken = jwtDecode<DecodedToken>(token);
+            const userId = decodedToken?.id;
+
+            if (!userId) {
+                console.log("Invalid token: userId not found.");
+                // Handle token validation failure
+                return;
+            }
+            try {
+                const response = await axios.get(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/request_get`,
+                    {
+                        params: {
+                            userId,
+                            requestId
+                        }, // Pass userId as a query parameter
+                        headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
+                    }
+                );
+                setCurrentRequest(response.data.request);
+                let tp_checkedCategories = {};
+                let tp_checkedItems = {};
+                if (response.data.request.mainCondition) {
+                    const mainConditionData = transformData(
+                        response.data.request.mainCondition,
+                        requestGroupCheckData,
+                        "main_condition"
+                    );
+                    tp_checkedCategories = { ...tp_checkedCategories, ...mainConditionData.checkedCategories };
+                    tp_checkedItems = { ...tp_checkedItems, ...mainConditionData.checkedItems };
+                }
+                if (response.data.request.subCondition) {
+                    const subConditionData = transformData(
+                        response.data.request.subCondition,
+                        requestGroupCheckData2,
+                        "sub_condition"
+                    );
+                    tp_checkedCategories = { ...tp_checkedCategories, ...subConditionData.checkedCategories };
+                    tp_checkedItems = { ...tp_checkedItems, ...subConditionData.checkedItems };
+                }
+
+                if (response.data.request.areaSelection) {
+                    const areaConditionData = transformData(
+                        response.data.request.areaSelection, // Corrected from mainCondition to areaSelection
+                        requestGroupCheckData3,
+                        "area_condition"
+                    );
+
+                    tp_checkedCategories = { ...tp_checkedCategories, ...areaConditionData.checkedCategories };
+                    tp_checkedItems = { ...tp_checkedItems, ...areaConditionData.checkedItems };
+                }
+                console.log(tp_checkedCategories);
+                console.log(tp_checkedItems);
+                setCheckedCategories(tp_checkedCategories);
+                setCheckedItems(tp_checkedItems);
+                console.log("Fetched clients:", response.data.request);
+
+            } catch (error) {
+                console.log("Error fetching clients:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchClients();
+    }, []);
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
             ...prev,
@@ -81,6 +210,7 @@ const NewRequest: React.FC = () => {
     };
 
     const confirmValues = () => {
+        console.log(checkedCategories)
         const selectedValues = getSelectedValues();
         setMainCondition(JSON.stringify(selectedValues.main_condition, null, 2))
         setSubCondition(JSON.stringify(selectedValues.sub_condition, null, 2))
@@ -119,19 +249,21 @@ const NewRequest: React.FC = () => {
         };
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Request saved successfully:', data);
+            const response = await axios.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/update_request/${currentRequest?.id}`,
+                requestData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include token for authentication
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+        
+            if (response.status === 200) {
+                console.log('Request saved successfully:', response.data);
                 alert('正常に保存されました');
-                router.push("/list_request")
+                router.push("/list_request");
             } else {
                 console.error('Failed to save request:', response.statusText);
                 alert('保存に失敗しました');
@@ -160,31 +292,34 @@ const NewRequest: React.FC = () => {
         }
 
         const selectedValues = getSelectedValues();
-        console.log(selectedValues);
+        console.log('Selected values:', selectedValues);
+
         const requestData = {
             userId: userId, // Replace with the actual user ID
-            projectName,
+            projectName: currentRequest?.projectName,
             mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
             subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
-            areaMemo,
+            areaMemo: currentRequest?.areaMemo,
             completeState: 0,
         };
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Request saved successfully:', data);
+            const response = await axios.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/update_request/${currentRequest?.id}`,
+                requestData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include token for authentication
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+        
+            if (response.status === 200) {
+                console.log('Request saved successfully:', response.data);
                 alert('正常に保存されました');
-                router.push("/list_request")
+                router.push("/list_request");
             } else {
                 console.error('Failed to save request:', response.statusText);
                 alert('保存に失敗しました');
@@ -197,15 +332,25 @@ const NewRequest: React.FC = () => {
     // const handleCategoryCheckboxModal = () => {
     //     setIsCheckBoxModalOpen(true)
     // }
-
+    if (loading) {
+        return (
+            <Loader />
+        )
+    }
     return (
+
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
                 <div className="my-4">
                     <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名</label>
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
-                        onChange={(e) => { setProjectName(e.target.value) }}
-                        value={projectName}
+                            onChange={(e) => {
+                                setCurrentRequest((prev) => prev ? ({
+                                    ...prev,
+                                    projectName: e.target.value,
+                                }) : prev);
+                            }}
+                        value={currentRequest?.projectName || ''}
                         required />
                 </div>
             </div>
@@ -214,29 +359,29 @@ const NewRequest: React.FC = () => {
                     <div className="flex">
                         <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
                         <button className="text-blue-500 ml-4"
-    onClick={() => {
-        const prefix = `${dataset.name}-`;
+                            onClick={() => {
+                                const prefix = `${dataset.name}-`;
 
-        setCheckedCategories((prev) => {
-            const newCheckedCategories = { ...prev };
-            Object.keys(newCheckedCategories).forEach(key => {
-                if (key.startsWith(prefix)) {
-                    delete newCheckedCategories[key];
-                }
-            });
-            return newCheckedCategories;
-        });
+                                setCheckedCategories((prev) => {
+                                    const newCheckedCategories = { ...prev };
+                                    Object.keys(newCheckedCategories).forEach(key => {
+                                        if (key.startsWith(prefix)) {
+                                            delete newCheckedCategories[key];
+                                        }
+                                    });
+                                    return newCheckedCategories;
+                                });
 
-        setCheckedItems((prev) => {
-            const newCheckedItems = { ...prev };
-            Object.keys(newCheckedItems).forEach(key => {
-                if (key.startsWith(prefix)) {
-                    delete newCheckedItems[key];
-                }
-            });
-            return newCheckedItems;
-        });
-    }}
+                                setCheckedItems((prev) => {
+                                    const newCheckedItems = { ...prev };
+                                    Object.keys(newCheckedItems).forEach(key => {
+                                        if (key.startsWith(prefix)) {
+                                            delete newCheckedItems[key];
+                                        }
+                                    });
+                                    return newCheckedItems;
+                                });
+                            }}
                         >
                             条件リセット
                         </button>
@@ -299,8 +444,13 @@ const NewRequest: React.FC = () => {
                 <div className="my-4">
                     <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">その他備考</label>
                     <input type="text" id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
-                        onChange={(e) => { setAreaMemo(e.target.value) }}
-                        value={areaMemo}
+                            onChange={(e) => {
+                                setCurrentRequest((prev) => prev ? ({
+                                    ...prev,
+                                    areaMemo: e.target.value,
+                                }) : prev);
+                            }}
+                        value={currentRequest?.areaMemo || ''}
                         placeholder="その他でご依頼内容があれば入力ください。"
                         required />
                 </div>
@@ -406,4 +556,4 @@ const NewRequest: React.FC = () => {
     );
 };
 
-export default NewRequest;
+export default ChangeRequest;

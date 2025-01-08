@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Loader from "@/components/common/Loader";
 import Modal from "@/components/common/Loader/Modal";
-import DetailModal from "@/components/common/Loader/DetailModal";
+import DetailModal from "@/components/common/Loader/DetailModal2";
 
 interface Client {
     id: number;
@@ -309,7 +309,7 @@ const ClientTable = () => {
                                         <input
                                             type="text"
                                             value={selectedClient.user?.contractId || ""}
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                             readOnly
                                         />
                                     </div>
@@ -318,7 +318,7 @@ const ClientTable = () => {
                                         <input
                                             type="text"
                                             value={selectedClient.user?.email || ""}
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                             readOnly
                                         />
                                     </div>
@@ -340,7 +340,7 @@ const ClientTable = () => {
                                                         : null
                                                 )
                                             }
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : ""}`}
                                             readOnly={isReadOnly}
                                         />
                                     </div>
@@ -349,7 +349,7 @@ const ClientTable = () => {
                                         <input
                                             type="number"
                                             value={countSum}
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                             readOnly
                                         />
                                     </div>
@@ -358,7 +358,7 @@ const ClientTable = () => {
                                         <input
                                             type="number"
                                             value={count_request}
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                             readOnly
                                         />
                                     </div>
@@ -375,14 +375,14 @@ const ClientTable = () => {
                                                     }).format(new Date(selectedClient.updatedAt))
                                                     : "N/A"
                                             }
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                             readOnly
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-gray-700">メモ</label>
                                         <textarea
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                            className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : ""}`}
                                             onChange={(e) =>
                                                 setSelectedClient((prev) =>
                                                     prev ? { ...prev, memo: e.target.value } : null

@@ -115,7 +115,7 @@ const FormLayout = () => {
                                         type="text"
                                         placeholder=""
                                         value={(user?.contractId) ? user?.contractId : " "}
-                                        className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
+                                        className="w-full rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary bg-gray-200"
                                         readOnly
                                     />
                                 </div>
@@ -133,7 +133,7 @@ const FormLayout = () => {
                                                 day: "numeric",
                                             }).format(new Date(user?.createdAt))
                                             : "N/A"}
-                                        className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
+                                        className="w-full rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary bg-gray-200"
                                         readOnly
                                     />
                                 </div>
@@ -145,7 +145,7 @@ const FormLayout = () => {
                                         type="email"
                                         placeholder=""
                                         value={user?.email}
-                                        className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
+                                        className="w-full rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary bg-gray-200"
                                         readOnly
                                     />
                                 </div>
@@ -158,7 +158,7 @@ const FormLayout = () => {
                                             <input
                                                 type="password"
                                                 placeholder="●●●●●●●●●●●"
-                                                className="w-full max-w-[330px] rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
+                                                className="w-full max-w-[330px] rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary bg-gray-200"
                                                 readOnly={isReadOnly}
                                             />
                                             <span>
@@ -175,7 +175,7 @@ const FormLayout = () => {
                                             <input
                                                 type="password"
                                                 placeholder=""
-                                                className="w-full max-w-[300px] rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
+                                                className="w-full max-w-[300px] rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary "
                                                 onChange={(e) => {
                                                     setChangePass(e.target.value)
                                                 }}
@@ -212,7 +212,7 @@ const FormLayout = () => {
                                         type="number"
                                         placeholder=""
                                         value={countSum}
-                                        className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
+                                        className="w-full rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary bg-gray-200"
                                         readOnly
                                     />
                                 </div>
@@ -224,7 +224,7 @@ const FormLayout = () => {
                                         type="number"
                                         placeholder=""
                                         value={count_request}
-                                        className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary"
+                                        className="w-full rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary bg-gray-200"
                                         readOnly
                                     />
                                 </div>

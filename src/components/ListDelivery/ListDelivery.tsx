@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Loader from "@/components/common/Loader";
 import DetailModal from "@/components/common/Loader/DetailModal";
+import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
+import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
 
 interface RequestList {
@@ -10,7 +12,7 @@ interface RequestList {
     requestRandId: string;
     projectName: string;
     completeState: number;
-    areaSelection: string;
+    areaSelection: Record<string, any>;
     areaMemo: string
     mainCondition: Record<string, any>;
     subCondition: Record<string, any>;
@@ -36,6 +38,11 @@ interface DecodedToken {
     role: number;
 }
 
+interface RequestGroupCheckData {
+    category: string;
+    options: string[];
+}
+
 const ListDeliveryTable = () => {
     const [requestLists, setRequestLists] = useState<RequestList[]>([]);
     const [loading, setLoading] = useState(true);
@@ -47,6 +54,33 @@ const ListDeliveryTable = () => {
     const [selectedOption, setSelectedOption] = useState<string>("");
     const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
+    const [currentCondition, setCurrentCondition] = useState("");
+
+    const transformData = (
+        input: Record<string, string[]>,
+        groupData: RequestGroupCheckData[],
+        condition_string: string
+    ): { checkedCategories: Record<string, boolean>; checkedItems: Record<string, Record<string, boolean>> } => {
+        const checkedCategories: Record<string, boolean> = {};
+        const checkedItems: Record<string, Record<string, boolean>> = {};
+    
+        groupData.forEach((group) => {
+            const categoryKey = `${condition_string}-${group.category}`;
+            const selectedOptions = input[group.category] || [];
+    
+            // Set checked status for categories
+            checkedCategories[categoryKey] = selectedOptions.length > 0;
+    
+            // Set checked status for individual options
+            checkedItems[categoryKey] = group.options.reduce((acc, option) => {
+                acc[option] = selectedOptions.includes(option);
+                return acc;
+            }, {} as Record<string, boolean>);
+        });
+    
+        return { checkedCategories, checkedItems };
+    };
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -249,7 +283,7 @@ const ListDeliveryTable = () => {
                                     <td className="border-b px-4 py-5 text-black">{index + 1}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.requestRandId}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
-                                    <td className="border-b px-4 py-5 text-black">{0}</td>
+                                    <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
                                     <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
                                     <td className="border-b px-4 py-5 text-black">
                                         {requestList.createdAt
@@ -321,34 +355,62 @@ const ListDeliveryTable = () => {
                                 readOnly={isReadOnly}
                             />
                         </div>
-                        <div>
-                            <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">業種の絞込み</label>
-                            <textarea id="main_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                                value={JSON.stringify(selectedList.mainCondition, null, 2)}
-                                required
-                                readOnly
+                        <div className="flex">
+                            <label htmlFor="main_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
+                            <button
+                                onClick={() => {
+                                    setIsCheckBoxModalOpen(true)
+                                    setCurrentCondition("main_condition")}}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                データを表示
+                            </button>
+                            <GroupCheckBox
+                                isOpen={isCheckBoxModalOpen}
+                                onClose={() => setIsCheckBoxModalOpen(false)}
+                                dataset={{ name: "main_condition", data: requestGroupCheckData }}
+                                current_condition={currentCondition}
+                                checkedCategories={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedCategories}
+                                checkedItems={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedItems}
                             />
                         </div>
-                        <div>
-                            <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">その他条件の絞込み</label>
-                            <textarea id="sub_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                                value={JSON.stringify(selectedList.subCondition, null, 2)}
-                                required
-                                readOnly
+                        <div className="flex">
+                            <label htmlFor="sub_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
+                            <button
+                                onClick={() => {
+                                    setIsCheckBoxModalOpen(true)
+                                    setCurrentCondition("sub_condition")}}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                データを表示
+                            </button>
+                            <GroupCheckBox
+                                isOpen={isCheckBoxModalOpen}
+                                onClose={() => setIsCheckBoxModalOpen(false)}
+                                dataset={{ name: "sub_condition", data: requestGroupCheckData2 }}
+                                current_condition={currentCondition}
+                                checkedCategories={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedCategories}
+                                checkedItems={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedItems}
                             />
                         </div>
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">エリアの絞り込み</label>
-                            <input
-                                type="text"
-                                value={selectedList.areaSelection}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly={isReadOnly}
-                                onChange={(e) => {
-                                    setSelectedList((prev) => ({
-                                        ...prev, areaSelection: e.target.value
-                                    } as RequestList))
-                                }}
+                            <button
+                                onClick={() => {
+                                    setIsCheckBoxModalOpen(true)
+                                    setCurrentCondition("area_condition")}}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+
+                            >
+                                データを表示
+                            </button>
+                            <GroupCheckBox
+                                isOpen={isCheckBoxModalOpen}
+                                onClose={() => setIsCheckBoxModalOpen(false)}
+                                dataset={{ name: "area_condition", data: requestGroupCheckData3 }}
+                                current_condition={currentCondition}
+                                checkedCategories={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedCategories}
+                                checkedItems={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedItems}
                             />
                         </div>
                         <div className="flex">

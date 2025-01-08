@@ -18,7 +18,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, on
   if (!isOpen) return null;
   const [changeFlag, setChangeFlag] = useState(false);
   const handleToggleChangeFlag = (flag: boolean) => {
-    // setChangeFlag(flag);
+    setChangeFlag(flag);
     onChangeFlag(flag); // Notify the parent
   };
   return (
