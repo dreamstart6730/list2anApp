@@ -143,7 +143,6 @@ const ListDeliveryTable = () => {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            alert(response.data.message);
             const updatedRequest = response.data.updatedRequest;
 
             // Update the selected list and request lists
@@ -269,6 +268,7 @@ const ListDeliveryTable = () => {
                         <thead>
                             <tr className="bg-gray-2 text-left">
                                 <th className="min-w-[40px] px-4 py-4 font-medium text-black">No</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">クライアント名</th>
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">依頼ID</th>
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">プロジェクト名</th>
                                 <th className="min-w-[120px] px-4 py-4 font-medium text-black">リスト数</th>
@@ -281,6 +281,7 @@ const ListDeliveryTable = () => {
                             {requestLists.map((requestList, index) => (
                                 <tr key={requestList.id}>
                                     <td className="border-b px-4 py-5 text-black">{index + 1}</td>
+                                    <td className="border-b px-4 py-5 text-black">{requestList.user.name}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.requestRandId}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
@@ -319,7 +320,7 @@ const ListDeliveryTable = () => {
                     onDelete={() => { }}
                     onDownloadList={() => { }}
                     deleteFlag={false}
-                    downloadFlag={false}
+                    downloadFlag={selectedList.completeState > 1}
                 >
                     <h2 className="text-lg font-bold mb-4 text-gray-700">リスト詳細</h2>
                     <div className="space-y-4">
@@ -415,10 +416,9 @@ const ListDeliveryTable = () => {
                         </div>
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">その他備考</label>
-                            <input
-                                type="text"
+                            <textarea
                                 value={selectedList.areaMemo}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 min-h-24"
                                 readOnly={isReadOnly}
                                 onChange={(e) => {
                                     setSelectedList((prev) => ({

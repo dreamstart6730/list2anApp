@@ -24,7 +24,7 @@ const SignIn: React.FC = () => {
       localStorage.setItem('listan_token', response.data.token); // Store token in local storage
       const decoded: { role: number } = jwtDecode(response.data.token);
       if (decoded.role > 0) router.push("/client_management")
-      else router.push("/")
+      else router.push("/list_request")
     } catch (error: any) {
       setMessage(error.response?.data?.message || 'An error occurred.');
     }

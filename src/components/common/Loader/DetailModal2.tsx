@@ -38,25 +38,9 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, on
                 onClick={() => {
                   onDelete();
                 }}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 hidden"
               >
                 削除
-              </button>
-            )}
-          </div>
-          <div>
-            {downloadFlag ? (
-              <button
-                className="ml-2 bg-green-500 text-white px-2 py-2 rounded hover:bg-green-600"
-                onClick={onDownloadList}
-              >
-                リストダウンロード
-              </button>
-            ) : (
-              <button
-                className="ml-2 bg-gray-500 text-white px-2 py-2 rounded hover:bg-gray-600"
-              >
-                リストダウンロード
               </button>
             )}
           </div>

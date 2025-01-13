@@ -90,7 +90,7 @@ const NewRequest: React.FC = () => {
     const handleSubmit = async () => {
         const token = localStorage.getItem('listan_token');
         if (!token) {
-            alert('User is not authenticated. Please log in.');
+            alert('ユーザーは認証されていません。ログインしてください。');
             return;
         }
 
@@ -130,7 +130,6 @@ const NewRequest: React.FC = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Request saved successfully:', data);
-                alert('正常に保存されました');
                 router.push("/list_request")
             } else {
                 console.error('Failed to save request:', response.statusText);
@@ -144,7 +143,7 @@ const NewRequest: React.FC = () => {
     const handleSubmitPreSave = async () => {
         const token = localStorage.getItem('listan_token');
         if (!token) {
-            alert('User is not authenticated. Please log in.');
+            alert('ユーザーは認証されていません。ログインしてください。');
             return;
         }
 
@@ -183,7 +182,6 @@ const NewRequest: React.FC = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Request saved successfully:', data);
-                alert('正常に保存されました');
                 router.push("/list_request")
             } else {
                 console.error('Failed to save request:', response.statusText);
@@ -214,29 +212,29 @@ const NewRequest: React.FC = () => {
                     <div className="flex">
                         <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
                         <button className="text-blue-500 ml-4"
-    onClick={() => {
-        const prefix = `${dataset.name}-`;
+                            onClick={() => {
+                                const prefix = `${dataset.name}-`;
 
-        setCheckedCategories((prev) => {
-            const newCheckedCategories = { ...prev };
-            Object.keys(newCheckedCategories).forEach(key => {
-                if (key.startsWith(prefix)) {
-                    delete newCheckedCategories[key];
-                }
-            });
-            return newCheckedCategories;
-        });
+                                setCheckedCategories((prev) => {
+                                    const newCheckedCategories = { ...prev };
+                                    Object.keys(newCheckedCategories).forEach(key => {
+                                        if (key.startsWith(prefix)) {
+                                            delete newCheckedCategories[key];
+                                        }
+                                    });
+                                    return newCheckedCategories;
+                                });
 
-        setCheckedItems((prev) => {
-            const newCheckedItems = { ...prev };
-            Object.keys(newCheckedItems).forEach(key => {
-                if (key.startsWith(prefix)) {
-                    delete newCheckedItems[key];
-                }
-            });
-            return newCheckedItems;
-        });
-    }}
+                                setCheckedItems((prev) => {
+                                    const newCheckedItems = { ...prev };
+                                    Object.keys(newCheckedItems).forEach(key => {
+                                        if (key.startsWith(prefix)) {
+                                            delete newCheckedItems[key];
+                                        }
+                                    });
+                                    return newCheckedItems;
+                                });
+                            }}
                         >
                             条件リセット
                         </button>
@@ -298,11 +296,12 @@ const NewRequest: React.FC = () => {
             <div>
                 <div className="my-4">
                     <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">その他備考</label>
-                    <input type="text" id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                    <textarea id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
                         onChange={(e) => { setAreaMemo(e.target.value) }}
                         value={areaMemo}
                         placeholder="その他でご依頼内容があれば入力ください。"
-                        required />
+                        required>
+                    </textarea>
                 </div>
             </div>
             <div>
@@ -360,8 +359,8 @@ const NewRequest: React.FC = () => {
                             ))}
                             <div className="my-4">
                                 <label htmlFor="area_memo_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">その他備考</label>
-                                <input type="text" id="area_memo_confirm"
-                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                                <textarea id="area_memo_confirm"
+                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
                                     onChange={(e) => { setAreaMemo(e.target.value) }}
                                     value={areaMemo}
                                     required

@@ -62,7 +62,10 @@ const FormLayout = () => {
     }, []);
 
     const handleSavePassword = async () => {
-        if (!changePass || changePass == "" || changePass.length < 8) return;
+        if (!changePass || changePass == "" || changePass.length < 8) {
+            alert("パスワードは8文字以上で入力してください。");
+            return;   
+        }
         const token = localStorage.getItem("listan_token");
         if (!token) {
             console.error("Token not found.");

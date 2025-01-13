@@ -292,7 +292,7 @@ const ClientTable = () => {
                     onChangeFlag={handleChangeFlag}
                     onDelete={() => {}}
                     onDownloadList={() => {}}
-                    deleteFlag= {false}
+                    deleteFlag= {true}
                     downloadFlag= {false}
                 >
                     {(() => {
