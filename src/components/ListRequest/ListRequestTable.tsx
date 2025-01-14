@@ -4,6 +4,7 @@ import axios from "axios";
 import Loader from "@/components/common/Loader";
 import DetailModal from "@/components/common/Loader/DetailModal";
 import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
+import RequestCategoryModal from "./RequestCategoryModal";
 import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
@@ -59,6 +60,7 @@ const ListRequestTable = () => {
     const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentCondition, setCurrentCondition] = useState("");
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
 
     const transformData = (
@@ -263,13 +265,14 @@ const ListRequestTable = () => {
     return (
         <>
             <div className="my-4">
-                <a
+                <button
                     className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    href="/new_request"
+                    onClick={() => {setIsCategoryModalOpen(true)}}
                 >
                     新規依頼
-                </a>
+                </button>
             </div>
+            <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={()=>{setIsCategoryModalOpen(false)}}/>
             <div className="rounded-sm border border-gray-500 mx-4 px-6 pb-2.5 pt-6 shadow-default bg-white sm:px-8 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">

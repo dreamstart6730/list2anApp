@@ -31,8 +31,7 @@ const DropdownUser = () => {
     const fetchUser = async () => {
       const token = localStorage.getItem("listan_token");
       if (!token) {
-        console.error("Token not found.");
- 
+        console.log("Token not found.");
         return;
       }
       try {
