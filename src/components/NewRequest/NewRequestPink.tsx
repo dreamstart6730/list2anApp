@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
+import { requestGroupCheckData4, requestGroupCheckData3 } from "@/constant/RequestGroup";
 import LargeModal from "../common/Loader/LargeModal";
 import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
+import TagInput from "../common/Loader/TagInput";
+
 
 interface RequestGroup {
     category: string;
@@ -19,24 +21,21 @@ interface DecodedToken {
     role: number;
 }
 
-const NewRequest: React.FC = () => {
+const NewRequestPink: React.FC = () => {
     const datasets = [
-        { name: "main_condition", data: requestGroupCheckData },
-        { name: "sub_condition", data: requestGroupCheckData2 },
         { name: "area_condition", data: requestGroupCheckData3 }
     ];
-
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: { [key: string]: boolean } }>({});
     const [checkedCategories, setCheckedCategories] = useState<{ [key: string]: boolean }>({});
     const [areaSelection, setAreaSelection] = useState("");
     const [areaMemo, setAreaMemo] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
-    const [mainCondition, setMainCondition] = useState("");
-    const [subCondition, setSubCondition] = useState("");
+    const [detailCondition, setDetailCondition] = useState("");
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
     const router = useRouter();
+
 
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
@@ -82,8 +81,7 @@ const NewRequest: React.FC = () => {
 
     const confirmValues = () => {
         const selectedValues = getSelectedValues();
-        setMainCondition(JSON.stringify(selectedValues.main_condition, null, 2))
-        setSubCondition(JSON.stringify(selectedValues.sub_condition, null, 2))
+        setDetailCondition(JSON.stringify(selectedValues.detail_condition, null, 2))
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
     };
 
@@ -111,15 +109,13 @@ const NewRequest: React.FC = () => {
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
             areaMemo,
             completeState: 1,
         };
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request_pink`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -163,15 +159,13 @@ const NewRequest: React.FC = () => {
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
             areaMemo,
             completeState: 0,
         };
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request_pink`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -192,9 +186,6 @@ const NewRequest: React.FC = () => {
             alert('保存中にエラーが発生しました。');
         }
     }
-    // const handleCategoryCheckboxModal = () => {
-    //     setIsCheckBoxModalOpen(true)
-    // }
 
     return (
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
@@ -210,7 +201,7 @@ const NewRequest: React.FC = () => {
             {datasets.map((dataset, datasetIndex) => (
                 <div key={datasetIndex}>
                     <div className="flex">
-                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
                                 const prefix = `${dataset.name}-`;
@@ -295,11 +286,11 @@ const NewRequest: React.FC = () => {
             ))}
             <div>
                 <div className="my-4">
-                    <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">その他備考</label>
+                    <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">市区</label>
                     <textarea id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
                         onChange={(e) => { setAreaMemo(e.target.value) }}
                         value={areaMemo}
-                        placeholder="その他でご依頼内容があれば入力ください。"
+                        placeholder="市や区のご依頼があれば入力ください。"
                         required>
                     </textarea>
                 </div>
@@ -337,7 +328,7 @@ const NewRequest: React.FC = () => {
                             </div>
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
-                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
@@ -358,7 +349,7 @@ const NewRequest: React.FC = () => {
                                 </div>
                             ))}
                             <div className="my-4">
-                                <label htmlFor="area_memo_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">その他備考</label>
+                                <label htmlFor="area_memo_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">市区</label>
                                 <textarea id="area_memo_confirm"
                                     className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
                                     onChange={(e) => { setAreaMemo(e.target.value) }}
@@ -405,4 +396,4 @@ const NewRequest: React.FC = () => {
     );
 };
 
-export default NewRequest;
+export default NewRequestPink;

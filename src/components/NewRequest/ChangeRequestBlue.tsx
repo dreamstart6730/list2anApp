@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { requestGroupCheckData4, requestGroupCheckData3 } from "@/constant/RequestGroup";
 import LargeModal from "../common/Loader/LargeModal";
 import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import TagInput from "../common/Loader/TagInput";
+
 
 interface RequestGroup {
     category: string;
@@ -19,12 +22,39 @@ interface DecodedToken {
     role: number;
 }
 
-const NewRequest: React.FC = () => {
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    contractId: string;
+}
+
+interface RequestList {
+    id: number;
+    requestRandId: string;
+    projectName: string;
+    completeState: number;
+    areaSelection: Record<string, any>;
+    tags: string[];
+    areaMemo: string;
+    detailCondition: Record<string, any>;
+    listCount: number;
+    fileName: string;
+    filePath: string;
+    createdAt: Date;
+    updatedAt: Date;
+    requestAt: Date;
+    deliveryAt: Date;
+    user: User;
+}
+
+const ChangeRequestBlue: React.FC = () => {
     const datasets = [
-        { name: "main_condition", data: requestGroupCheckData },
-        { name: "sub_condition", data: requestGroupCheckData2 },
+        { name: "detail_condition", data: requestGroupCheckData4 },
         { name: "area_condition", data: requestGroupCheckData3 }
     ];
+
+    const [tags, setTags] = useState<string[]>([]);
 
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: { [key: string]: boolean } }>({});
     const [checkedCategories, setCheckedCategories] = useState<{ [key: string]: boolean }>({});
@@ -32,11 +62,104 @@ const NewRequest: React.FC = () => {
     const [areaMemo, setAreaMemo] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
-    const [mainCondition, setMainCondition] = useState("");
-    const [subCondition, setSubCondition] = useState("");
+    const [detailCondition, setDetailCondition] = useState("");
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
+    const [currentRequest, setCurrentRequest] = useState<RequestList | null>(null);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const requestId = searchParams.get('requestId');
+    const transformData = (
+        input: Record<string, string[]>,
+        groupData: RequestGroup[],
+        condition_string: string
+    ): { checkedCategories: Record<string, boolean>; checkedItems: Record<string, Record<string, boolean>> } => {
+        const checkedCategories: Record<string, boolean> = {};
+        const checkedItems: Record<string, Record<string, boolean>> = {};
+
+        groupData.forEach((group) => {
+            const categoryKey = `${condition_string}-${group.category}`;
+            const selectedOptions = input[group.category] || [];
+
+            // Set checked status for categories
+            checkedCategories[categoryKey] = selectedOptions.length > 0;
+
+            // Set checked status for individual options
+            checkedItems[categoryKey] = group.options.reduce((acc, option) => {
+                acc[option] = selectedOptions.includes(option);
+                return acc;
+            }, {} as Record<string, boolean>);
+        });
+
+        return { checkedCategories, checkedItems };
+    };
+    useEffect(() => {
+        const fetchClients = async () => {
+            const token = localStorage.getItem("listan_token");
+            if (!token) {
+                console.log("No token found. Redirecting to login...");
+                return;
+            }
+
+            const decodedToken = jwtDecode<DecodedToken>(token);
+            const userId = decodedToken?.id;
+
+            if (!userId) {
+                console.log("Invalid token: userId not found.");
+                // Handle token validation failure
+                return;
+            }
+            try {
+                const response = await axios.get(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/request_get_blue`,
+                    {
+                        params: {
+                            userId,
+                            requestId
+                        }, // Pass userId as a query parameter
+                        headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
+                    }
+                );
+                setCurrentRequest(response.data.requestBlue);
+                setTags(response.data.requestBlue.tags)
+                let tp_checkedCategories = {};
+                let tp_checkedItems = {};
+                if (response.data.requestBlue.detailCondition) {
+                    const detailConditionData = transformData(
+                        response.data.requestBlue.detailCondition,
+                        requestGroupCheckData4,
+                        "detail_condition"
+                    );
+                    tp_checkedCategories = { ...tp_checkedCategories, ...detailConditionData.checkedCategories };
+                    tp_checkedItems = { ...tp_checkedItems, ...detailConditionData.checkedItems };
+                }
+
+                if (response.data.requestBlue.areaSelection) {
+                    const areaConditionData = transformData(
+                        response.data.requestBlue.areaSelection, // Corrected from mainCondition to areaSelection
+                        requestGroupCheckData3,
+                        "area_condition"
+                    );
+
+                    tp_checkedCategories = { ...tp_checkedCategories, ...areaConditionData.checkedCategories };
+                    tp_checkedItems = { ...tp_checkedItems, ...areaConditionData.checkedItems };
+                }
+                console.log(tp_checkedCategories);
+                console.log(tp_checkedItems);
+                setCheckedCategories(tp_checkedCategories);
+                setCheckedItems(tp_checkedItems);
+                console.log("Fetched clients:", response.data.request);
+
+            } catch (error) {
+                console.log("Error fetching clients:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchClients();
+    }, []);
 
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
@@ -82,12 +205,11 @@ const NewRequest: React.FC = () => {
 
     const confirmValues = () => {
         const selectedValues = getSelectedValues();
-        setMainCondition(JSON.stringify(selectedValues.main_condition, null, 2))
-        setSubCondition(JSON.stringify(selectedValues.sub_condition, null, 2))
+        setDetailCondition(JSON.stringify(selectedValues.detail_condition, null, 2))
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async ({completeState}: {completeState: number}) => {
         const token = localStorage.getItem('listan_token');
         if (!token) {
             alert('ユーザーは認証されていません。ログインしてください。');
@@ -110,27 +232,29 @@ const NewRequest: React.FC = () => {
 
         const requestData = {
             userId: userId, // Replace with the actual user ID
-            projectName,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
+            projectName: currentRequest?.projectName,
+            detailCondition: selectedValues.detail_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
-            areaMemo,
-            completeState: 1,
+            tags: tags,
+            areaMemo: currentRequest?.areaMemo,
+            completeState,
         };
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData),
-            });
+            const response = await axios.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/update_request_blue/${currentRequest?.id}`,
+                requestData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include token for authentication
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Request saved successfully:', data);
-                router.push("/list_request")
+            if (response.status === 200) {
+                console.log('Request saved successfully:', response.data);
+                router.push("/list_request");
             } else {
                 console.error('Failed to save request:', response.statusText);
                 alert('保存に失敗しました');
@@ -140,61 +264,6 @@ const NewRequest: React.FC = () => {
             alert('保存中にエラーが発生しました。');
         }
     }
-    const handleSubmitPreSave = async () => {
-        const token = localStorage.getItem('listan_token');
-        if (!token) {
-            alert('ユーザーは認証されていません。ログインしてください。');
-            return;
-        }
-
-        let userId;
-        try {
-            // Decode the token to extract user information
-            const decodedToken = jwtDecode<DecodedToken>(token) // jwtDecode automatically decodes the token
-            userId = decodedToken.id; // Extract the user ID
-        } catch (error) {
-            console.error('Error decoding token:', error);
-            alert('トークンが無効です。もう一度ログインしてください。');
-            return;
-        }
-
-        const selectedValues = getSelectedValues();
-        console.log(selectedValues);
-        const requestData = {
-            userId: userId, // Replace with the actual user ID
-            projectName,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
-            areaSelection: selectedValues.area_condition || {},
-            areaMemo,
-            completeState: 0,
-        };
-
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Request saved successfully:', data);
-                router.push("/list_request")
-            } else {
-                console.error('Failed to save request:', response.statusText);
-                alert('保存に失敗しました');
-            }
-        } catch (error) {
-            console.error('Error saving request:', error);
-            alert('保存中にエラーが発生しました。');
-        }
-    }
-    // const handleCategoryCheckboxModal = () => {
-    //     setIsCheckBoxModalOpen(true)
-    // }
 
     return (
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
@@ -202,15 +271,24 @@ const NewRequest: React.FC = () => {
                 <div className="my-4">
                     <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名</label>
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
-                        onChange={(e) => { setProjectName(e.target.value) }}
-                        value={projectName}
+                        onChange={(e) => {
+                            setCurrentRequest((prev) => prev ? ({
+                                ...prev,
+                                projectName: e.target.value,
+                            }) : prev);
+                        }}
+                        value={currentRequest?.projectName || ''}
                         required />
+                </div>
+                <div className="my-4">
+                    <label htmlFor="tags" className="block mb-2 text-base font-base text-black">タグ番号</label>
+                    <TagInput data={currentRequest?.tags || []} getTags={(tags: string[]) => setTags(tags)} />
                 </div>
             </div>
             {datasets.map((dataset, datasetIndex) => (
                 <div key={datasetIndex}>
                     <div className="flex">
-                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
                                 const prefix = `${dataset.name}-`;
@@ -297,8 +375,13 @@ const NewRequest: React.FC = () => {
                 <div className="my-4">
                     <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">その他備考</label>
                     <textarea id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
-                        onChange={(e) => { setAreaMemo(e.target.value) }}
-                        value={areaMemo}
+                        onChange={(e) => {
+                            setCurrentRequest((prev) => prev ? ({
+                                ...prev,
+                                areaMemo: e.target.value,
+                            }) : prev);
+                        }}
+                        value={currentRequest?.areaMemo || ''}
                         placeholder="その他でご依頼内容があれば入力ください。"
                         required>
                     </textarea>
@@ -329,15 +412,24 @@ const NewRequest: React.FC = () => {
                                 <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">プロジェクト名</label>
                                 <input type="text" id="project_name_confirm"
                                     className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
-                                    onChange={(e) => { setProjectName(e.target.value) }}
-                                    value={projectName}
+                                    value={currentRequest?.projectName}
                                     required
                                     readOnly
                                 />
                             </div>
+                            <div className="my-4">
+                                <div className="my-4">
+                                    <label htmlFor="tags" className="block mb-2 text-base font-base text-black">タグ番号</label>
+                                    <input type="text"
+                                        className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                                        value={tags}
+                                        readOnly
+                                    />
+                                </div>
+                            </div>
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
-                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
@@ -362,7 +454,7 @@ const NewRequest: React.FC = () => {
                                 <textarea id="area_memo_confirm"
                                     className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
                                     onChange={(e) => { setAreaMemo(e.target.value) }}
-                                    value={areaMemo}
+                                    value={currentRequest?.areaMemo}
                                     required
                                     readOnly
                                 />
@@ -383,7 +475,7 @@ const NewRequest: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmitPreSave();
+                                handleSubmit({completeState: 0});
                             }}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mx-4"
                         >
@@ -392,7 +484,7 @@ const NewRequest: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit();
+                                handleSubmit({completeState: 1});
                             }}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-4"
                         >
@@ -405,4 +497,4 @@ const NewRequest: React.FC = () => {
     );
 };
 
-export default NewRequest;
+export default ChangeRequestBlue;

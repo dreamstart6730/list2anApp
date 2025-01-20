@@ -113,9 +113,9 @@ const NewRequestBlue: React.FC = () => {
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
+            detailCondition: selectedValues.detail_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
+            tags: tags,
             areaMemo,
             completeState: 1,
         };
@@ -161,19 +161,18 @@ const NewRequestBlue: React.FC = () => {
         }
 
         const selectedValues = getSelectedValues();
-        console.log(selectedValues);
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
+            tags: tags,
+            detailCondition: selectedValues.detail_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
             areaMemo,
             completeState: 0,
         };
-
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request_blue`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -409,7 +408,7 @@ const NewRequestBlue: React.FC = () => {
                             }}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-4"
                         >
-                            登録する
+                            依頼する
                         </button>
                     </div>
                 </div>
