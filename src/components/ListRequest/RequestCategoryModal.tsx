@@ -23,22 +23,22 @@ const RequestCategoryModal: React.FC<RequestCategoryModalProps> = ({ isOpen, onC
                         依頼したいリストを選択してください。
                     </p>
                     <div className="flex justify-between ">
-                        <Link href={`/new_request_blue`}>
+                        <Link href={`/new_request/blue`}>
                             <button type="button"
                                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2">
                                 ブルー</button>
                         </Link>
-                        <Link href={`/new_request`}>
+                        <Link href={`/new_request/green`}>
                             <button type="button"
                                 className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2">
                                 グリーン</button>
                         </Link>
-                        <Link href={`#`}>
+                        <Link href={`/new_request/yellow`}>
                             <button type="button"
                                 className="focus:outline-none text-white bg-yellow-600 hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2">
                                 イエロー</button>
                         </Link>
-                        <Link href={`#`}>
+                        <Link href={`/new_request/pink`}>
                             <button type="button"
                                 className="focus:outline-none text-white bg-pink-700 hover:bg-pink-800 focus:ring-4 focus:ring-pink-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2">
                                 ピンク</button>

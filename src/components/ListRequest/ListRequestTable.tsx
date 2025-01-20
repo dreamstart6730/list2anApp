@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Loader from "@/components/common/Loader";
 import DetailModal from "@/components/common/Loader/DetailModal";
-import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
+import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3, requestGroupCheckData4 } from "@/constant/RequestGroup";
 import RequestCategoryModal from "./RequestCategoryModal";
 import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
@@ -12,7 +12,11 @@ import { useRouter } from "next/navigation";
 interface RequestList {
     id: number;
     requestRandId: string;
+    category: string;
     projectName: string;
+    tags: string[];
+    portalSite: string[];
+    detailCondition: Record<string, any>;
     completeState: number;
     areaSelection: Record<string, any>;
     areaMemo: string
@@ -88,17 +92,8 @@ const ListRequestTable = () => {
         return { checkedCategories, checkedItems };
     };
 
-    // for (const [category, options] of Object.entries(groupData)) {
-    // //   result[`${condition_string}-${category}`] = true;
-    //     for (const option of options) {
-    //         result[`${option}`] = true;
-    //     }
-    // }
-
-    // return result;
-    //   };
     useEffect(() => {
-        const fetchClients = async () => {
+        const fetchRequests = async () => {
             const token = localStorage.getItem("listan_token");
             if (!token) {
                 console.log("No token found. Redirecting to login...");
@@ -121,7 +116,19 @@ const ListRequestTable = () => {
                         headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
                     }
                 );
-                setRequestLists(response.data.requests);
+                const requests = response.data.requests.map((request: RequestList) => ({ ...request, category: 'グリーン' }));
+                const requestsBlue = response.data.requestsBlue.map((request: RequestList) => ({ ...request, category: 'ブルー' }));
+                const requestsPink = response.data.requestsPink.map((request: RequestList) => ({ ...request, category: 'ピンク' }));
+                const requestsYellow = response.data.requestsYellow.map((request: RequestList) => ({ ...request, category: 'イエロー' }));
+
+                const combinedRequests = [
+                    ...requests,
+                    ...requestsBlue,
+                    ...requestsPink,
+                    ...requestsYellow
+                ];
+
+                setRequestLists(combinedRequests);
                 console.log("Fetched clients:", response.data.requests);
             } catch (error) {
                 console.log("Error fetching clients:", error);
@@ -130,13 +137,27 @@ const ListRequestTable = () => {
             }
         };
 
-        fetchClients();
+        fetchRequests();
     }, []);
     const router = useRouter();
     const handleChangeFlag = (flag: boolean) => {
-        // setIsReadOnly(!flag); // Update read-only based on flag
         if (selectedList?.id) {
-            router.push(`/request_change?requestId=${selectedList.id}`);
+            switch (selectedList.category) {
+                case 'グリーン':
+                    router.push(`/request_change?requestId=${selectedList.id}`);
+                    break;
+                case 'ブルー':
+                    router.push(`/request_change_blue?requestId=${selectedList.id}`);
+                    break;
+                case 'イエロー':
+                    router.push(`/request_change_yellow?requestId=${selectedList.id}`);
+                    break;
+                case 'ピンク':
+                    router.push(`/request_change_pink?requestId=${selectedList.id}`);
+                    break;
+                default:
+                    console.log("Unknown category");
+            }
         }
     };
 
@@ -198,17 +219,56 @@ const ListRequestTable = () => {
                 console.log("No token found. Cannot update request.");
                 return;
             }
-
-            const response = await axios.delete(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request/${selectedList.id}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // Include token for authentication
-                    },
+            let response;
+            if (selectedList?.id) {
+                
+                switch (selectedList.category) {
+                    case 'グリーン':
+                        response = await axios.delete(
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request/${selectedList.id}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${token}`, // Include token for authentication
+                                },
+                            }
+                        );
+                        break;
+                    case 'ブルー':
+                        response = await axios.delete(
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request_blue/${selectedList.id}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${token}`, // Include token for authentication
+                                },
+                            }
+                        );
+                        break;
+                    case 'イエロー':
+                        response = await axios.delete(
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request_yellow/${selectedList.id}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${token}`, // Include token for authentication
+                                },
+                            }
+                        );
+                        break;
+                    case 'ピンク':
+                        response = await axios.delete(
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request_pink/${selectedList.id}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${token}`, // Include token for authentication
+                                },
+                            }
+                        );
+                        break;
+                    default:
+                        console.log("Unknown category");
                 }
-            );
+            }
 
-            if (response.status === 200) {
+            if (response?.status === 200) {
                 console.log("Request deleted successfully:", response.data);
                 alert("リクエストが削除されました。!");
                 setRequestLists((prevRequests) =>
@@ -216,7 +276,7 @@ const ListRequestTable = () => {
                 );
                 setIsDetailModalOpen(false);
             } else {
-                console.error("Failed to delete request:", response.statusText);
+                console.error("Failed to delete request:", response?.statusText);
                 alert("リクエストの削除に失敗しました。");
             }
         } catch (error) {
@@ -267,12 +327,12 @@ const ListRequestTable = () => {
             <div className="my-4">
                 <button
                     className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    onClick={() => {setIsCategoryModalOpen(true)}}
+                    onClick={() => { setIsCategoryModalOpen(true) }}
                 >
                     新規依頼
                 </button>
             </div>
-            <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={()=>{setIsCategoryModalOpen(false)}}/>
+            <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={() => { setIsCategoryModalOpen(false) }} />
             <div className="rounded-sm border border-gray-500 mx-4 px-6 pb-2.5 pt-6 shadow-default bg-white sm:px-8 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">
@@ -282,6 +342,7 @@ const ListRequestTable = () => {
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">依頼ID</th>
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">プロジェクト名</th>
                                 <th className="min-w-[120px] px-4 py-4 font-medium text-black">リスト数</th>
+                                <th className="px-4 py-4 font-medium text-black">リスト区分</th>
                                 <th className="px-4 py-4 font-medium text-black">状況</th>
                                 <th className="px-4 py-4 font-medium text-black">更新日</th>
                                 <th className="px-4 py-4 font-medium text-black"></th>
@@ -289,11 +350,12 @@ const ListRequestTable = () => {
                         </thead>
                         <tbody>
                             {requestLists.map((requestList, index) => (
-                                <tr key={requestList.id}>
+                                <tr key={requestList.id + requestList.category}>
                                     <td className="border-b px-4 py-5 text-black">{index + 1}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.requestRandId}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
+                                    <td className="border-b px-4 py-5 text-black">{requestList.category}</td>
                                     <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
                                     <td className="border-b px-4 py-5 text-black">
                                         {requestList.updatedAt
@@ -356,56 +418,72 @@ const ListRequestTable = () => {
                                 readOnly={isReadOnly}
                             />
                         </div>
-                        <div>
-                            <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
-                            {/* <textarea id="main_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                                value={JSON.stringify(selectedList.mainCondition, null, 2)}
-                                required
-                                readOnly
-                            /> */}
-                            <button
-                                onClick={() => {
-                                    setIsCheckBoxModalOpen(true)
-                                    setCurrentCondition("main_condition")
-                                }}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                            >
-                                データを表示
-                            </button>
-                            <GroupCheckBox
-                                isOpen={isCheckBoxModalOpen}
-                                onClose={() => setIsCheckBoxModalOpen(false)}
-                                dataset={{ name: "main_condition", data: requestGroupCheckData }}
-                                current_condition={currentCondition}
-                                checkedCategories={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedCategories}
-                                checkedItems={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedItems}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
-                            {/* <textarea id="sub_condition_confirm" className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                                value={JSON.stringify(selectedList.subCondition, null, 2)}
-                                required
-                                readOnly
-                            /> */}
-                            <button
-                                onClick={() => {
-                                    setIsCheckBoxModalOpen(true)
-                                    setCurrentCondition("sub_condition")
-                                }}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                            >
-                                データを表示
-                            </button>
-                            <GroupCheckBox
-                                isOpen={isCheckBoxModalOpen}
-                                onClose={() => setIsCheckBoxModalOpen(false)}
-                                dataset={{ name: "sub_condition", data: requestGroupCheckData2 }}
-                                current_condition={currentCondition}
-                                checkedCategories={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedCategories}
-                                checkedItems={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedItems}
-                            />
-                        </div>
+                        {(selectedList.category == 'グリーン') && (
+                            <div>
+                                <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
+                                <button
+                                    onClick={() => {
+                                        setIsCheckBoxModalOpen(true)
+                                        setCurrentCondition("main_condition")
+                                    }}
+                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                >
+                                    データを表示
+                                </button>
+                                <GroupCheckBox
+                                    isOpen={isCheckBoxModalOpen}
+                                    onClose={() => setIsCheckBoxModalOpen(false)}
+                                    dataset={{ name: "main_condition", data: requestGroupCheckData }}
+                                    current_condition={currentCondition}
+                                    checkedCategories={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedCategories}
+                                    checkedItems={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedItems}
+                                />
+                            </div>
+                        )}
+                        {(selectedList.category == 'ブルー') && (
+                            <div>
+                                <label htmlFor="detail_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">条件の絞り込み</label>
+                                <button
+                                    onClick={() => {
+                                        setIsCheckBoxModalOpen(true)
+                                        setCurrentCondition("detail_condition")
+                                    }}
+                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                >
+                                    データを表示
+                                </button>
+                                <GroupCheckBox
+                                    isOpen={isCheckBoxModalOpen}
+                                    onClose={() => setIsCheckBoxModalOpen(false)}
+                                    dataset={{ name: "detail_condition", data: requestGroupCheckData4 }}
+                                    current_condition={currentCondition}
+                                    checkedCategories={transformData(selectedList.detailCondition, requestGroupCheckData4, "detail_condition").checkedCategories}
+                                    checkedItems={transformData(selectedList.detailCondition, requestGroupCheckData4, "detail_condition").checkedItems}
+                                />
+                            </div>
+                        )}
+                        {(selectedList.category == 'グリーン') && (
+                            <div>
+                                <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
+                                <button
+                                    onClick={() => {
+                                        setIsCheckBoxModalOpen(true)
+                                        setCurrentCondition("sub_condition")
+                                    }}
+                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                >
+                                    データを表示
+                                </button>
+                                <GroupCheckBox
+                                    isOpen={isCheckBoxModalOpen}
+                                    onClose={() => setIsCheckBoxModalOpen(false)}
+                                    dataset={{ name: "sub_condition", data: requestGroupCheckData2 }}
+                                    current_condition={currentCondition}
+                                    checkedCategories={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedCategories}
+                                    checkedItems={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedItems}
+                                />
+                            </div>
+                        )}
                         <div>
                             <label className="block text-gray-700 min-w-40">エリアの絞り込み</label>
                             <button
@@ -427,18 +505,58 @@ const ListRequestTable = () => {
                                 checkedItems={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedItems}
                             />
                         </div>
+                        {(selectedList.category == 'ブルー') && (
+                            <div className="flex">
+                                <label className="block text-gray-700 min-w-40">タグ番号</label>
+                                <input
+                                    type="text"
+                                    value={selectedList.tags.toString()}
+                                    onChange={(e) => {
+                                        setSelectedList((prev) => ({
+                                            ...prev, projectName: e.target.value
+                                        } as RequestList))
+                                    }}
+                                    className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
+                                    readOnly={isReadOnly}
+                                />
+                            </div>
+                        )}
+                        {(selectedList.category == 'イエロー') && (
+                            <div className="flex">
+                                <label className="block text-gray-700 min-w-40">ポータルサイト</label>
+                                <input
+                                    type="text"
+                                    value={selectedList.portalSite}
+                                    onChange={(e) => {
+                                        setSelectedList((prev) => ({
+                                            ...prev, projectName: e.target.value
+                                        } as RequestList))
+                                    }}
+                                    className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
+                                    readOnly={isReadOnly}
+                                />
+                            </div>
+                        )}
                         <div className="flex">
-                            <label className="block text-gray-700 min-w-40">その他備考</label>
-                            <input
-                                type="text"
+                            <label className="block text-gray-700 min-w-40">{(selectedList.category == 'ピンク') ? '市区' : 'その他備考'}</label>
+                            <textarea
                                 value={selectedList.areaMemo}
-                                className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
+                                className={`bg-gray-200 text-gray-900 text-sm rounded-lg focus:outline-none focus:border-gray-500 w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
                                 readOnly={isReadOnly}
                                 onChange={(e) => {
                                     setSelectedList((prev) => ({
                                         ...prev, areaMemo: e.target.value
                                     } as RequestList))
                                 }}
+                            />
+                        </div>
+                        <div className="flex">
+                            <label className="block text-gray-700 min-w-40">リスト数</label>
+                            <input
+                                type="number"
+                                value={selectedList.listCount}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
+                                readOnly
                             />
                         </div>
                         <div className="flex">
@@ -451,15 +569,14 @@ const ListRequestTable = () => {
                             />
                         </div>
                         <div className="flex">
-                            <label className="block text-gray-700 min-w-40">リスト数</label>
+                            <label className="block text-gray-700 min-w-40">リスト区分</label>
                             <input
-                                type="number"
-                                value={selectedList.listCount}
+                                type="text"
+                                value={selectedList.category}
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />
                         </div>
-
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">依頼日</label>
                             <input

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface TagInputProps {
     data: string[];
@@ -8,6 +8,10 @@ interface TagInputProps {
 const TagInput: React.FC<TagInputProps> = ({ data, getTags }) => {
     const [tags, setTags] = useState<string[]>(data);
     const [inputValue, setInputValue] = useState("");
+
+    useEffect(() => {
+        setTags(data);
+    }, [data]);
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
