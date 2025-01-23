@@ -168,7 +168,7 @@ const ChangeRequest: React.FC = () => {
         };
 
         fetchClients();
-    }, []);
+    }, [requestId]);
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
             ...prev,
