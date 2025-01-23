@@ -25,6 +25,7 @@ interface RequestList {
     id: number;
     requestRandId: string;
     projectName: string;
+    wishNum: number;
     completeState: number;
     areaSelection: Record<string, any>;
     areaMemo: string
@@ -57,6 +58,7 @@ const ChangeRequestPink: React.FC = () => {
     const [areaMemo, setAreaMemo] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
+    const [wishNum, setWishNum] = useState(0);
     const [detailCondition, setDetailCondition] = useState("");
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
@@ -217,11 +219,15 @@ const ChangeRequestPink: React.FC = () => {
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName: currentRequest?.projectName,
+            wishNum: currentRequest?.wishNum,
             areaSelection: selectedValues.area_condition || {},
             areaMemo: currentRequest?.areaMemo,
             completeState,
         };
-
+        if(requestData.projectName === "" || (requestData.wishNum ?? 0) < 1 || Object.keys(requestData.areaSelection).length === 0) {
+            alert("必須項目を入力してください。");
+            return;
+        }
         try {
             const response = await axios.put(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/update_request_pink/${currentRequest?.id}`,
@@ -251,7 +257,7 @@ const ChangeRequestPink: React.FC = () => {
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
                 <div className="my-4">
-                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名</label>
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名<span className="text-red-500 text-sm ml-2">※</span></label>
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => {
                             setCurrentRequest((prev) => prev ? ({
@@ -262,11 +268,26 @@ const ChangeRequestPink: React.FC = () => {
                         value={currentRequest?.projectName || ''}
                         required />
                 </div>
+                <div className="my-4">
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">希望件数<span className="text-red-500 text-sm ml-2">※</span></label>
+                    <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
+                        onChange={(e) => {
+                            let value = e.target.value;
+                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
+                            const intValue = Number(value);
+                            setCurrentRequest((prev) => prev ? ({
+                                ...prev,
+                                wishNum: intValue,
+                            }) : prev);
+                        }}
+                        value={currentRequest?.wishNum || '0'}
+                        required />
+                </div>
             </div>
             {datasets.map((dataset, datasetIndex) => (
                 <div key={datasetIndex}>
                     <div className="flex">
-                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
                                 const prefix = `${dataset.name}-`;
@@ -392,6 +413,15 @@ const ChangeRequestPink: React.FC = () => {
                                     className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     onChange={(e) => { setProjectName(e.target.value) }}
                                     value={currentRequest?.projectName}
+                                    required
+                                    readOnly
+                                />
+                            </div>
+                            <div className="my-4">
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">希望件数</label>
+                                <input type="number" id="project_name_confirm"
+                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                                    value={currentRequest?.wishNum}
                                     required
                                     readOnly
                                 />

@@ -14,6 +14,7 @@ interface RequestList {
     requestRandId: string;
     category: string;
     projectName: string;
+    wishNum: number;
     tags: string[];
     portalSite: string[];
     detailCondition: Record<string, any>;
@@ -221,7 +222,7 @@ const ListRequestTable = () => {
             }
             let response;
             if (selectedList?.id) {
-                
+
                 switch (selectedList.category) {
                     case 'グリーン':
                         response = await axios.delete(
@@ -303,7 +304,10 @@ const ListRequestTable = () => {
             // Create a temporary link element for downloading
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', selectedList.fileName || 'download.csv'); // Rename the file using `fileName`
+            const now = new Date();
+            const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+            const fileName = `${selectedList.projectName || 'MyProject'}_${formattedDate}.csv`;
+            link.setAttribute('download', fileName); // Rename the file using `fileName`
 
             // Trigger the download
             document.body.appendChild(link);
@@ -418,9 +422,18 @@ const ListRequestTable = () => {
                                 readOnly={isReadOnly}
                             />
                         </div>
+                        <div className="flex">
+                            <label className="block text-gray-700 min-w-40">希望件数</label>
+                            <input
+                                type="text"
+                                value={selectedList.wishNum}
+                                className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
+                                readOnly={isReadOnly}
+                            />
+                        </div>
                         {(selectedList.category == 'グリーン') && (
-                            <div>
-                                <label htmlFor="main_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
+                            <div className="flex">
+                                <label htmlFor="main_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
                                 <button
                                     onClick={() => {
                                         setIsCheckBoxModalOpen(true)
@@ -441,8 +454,8 @@ const ListRequestTable = () => {
                             </div>
                         )}
                         {(selectedList.category == 'ブルー') && (
-                            <div>
-                                <label htmlFor="detail_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">条件の絞り込み</label>
+                            <div className="flex">
+                                <label htmlFor="detail_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">条件の絞り込み</label>
                                 <button
                                     onClick={() => {
                                         setIsCheckBoxModalOpen(true)
@@ -463,8 +476,8 @@ const ListRequestTable = () => {
                             </div>
                         )}
                         {(selectedList.category == 'グリーン') && (
-                            <div>
-                                <label htmlFor="sub_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
+                            <div className="flex">
+                                <label htmlFor="sub_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
                                 <button
                                     onClick={() => {
                                         setIsCheckBoxModalOpen(true)
@@ -484,8 +497,8 @@ const ListRequestTable = () => {
                                 />
                             </div>
                         )}
-                        <div>
-                            <label className="block text-gray-700 min-w-40">エリアの絞り込み</label>
+                        <div className="flex">
+                            <label className="min-w-40 block text-gray-700 min-w-40">エリアの絞り込み</label>
                             <button
                                 onClick={() => {
                                     setIsCheckBoxModalOpen(true)

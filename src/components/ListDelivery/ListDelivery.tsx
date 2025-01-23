@@ -12,6 +12,7 @@ interface RequestList {
     requestRandId: string;
     category: string;
     projectName: string;
+    wishNum: number;
     tags: string[];
     portalSite: string[];
     detailCondition: Record<string, any>;
@@ -153,23 +154,41 @@ const ListDeliveryTable = () => {
             alert("リストが選択されていません。");
             return;
         }
-
+        let categoryMark = "";
+        switch (selectedList.category) {
+            case 'ピンク':
+                categoryMark = "Pink";
+                break;
+            case 'ブルー':
+                categoryMark = "Blue";
+                break;
+            case 'グリーン':
+                categoryMark = "Green";
+                break;
+            case 'イエロー':
+                categoryMark = "Yellow";
+                break;
+            default:
+                categoryMark = "Unknown";
+                break;
+        }
         const formData = new FormData();
         formData.append("file", selectedFile);
         formData.append("requestId", selectedList.id.toString());
+        formData.append('category', categoryMark)
 
         try {
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/upload-csv-file`, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            const updatedRequest = response.data.updatedRequest;
-
+            let updatedRequest = response.data.updatedRequest;
+            updatedRequest.category = selectedList.category;
             // Update the selected list and request lists
-            setSelectedList((prev) => (prev && prev.id === updatedRequest.id ? updatedRequest : prev));
+            setSelectedList((prev) => (prev && (prev.id === updatedRequest.id && prev.category === updatedRequest.category) ? updatedRequest : prev));
             setRequestLists((prevRequests) =>
                 prevRequests.map((request) =>
-                    request.id === updatedRequest.id ? updatedRequest : request
+                    (request.id === updatedRequest.id && request.category === updatedRequest.category) ? updatedRequest : request
                 )
             );
         } catch (error) {
@@ -230,6 +249,41 @@ const ListDeliveryTable = () => {
     const openDetailModal = (requestList: RequestList) => {
         setSelectedList(requestList);
         setIsDetailModalOpen(true);
+    };
+
+    const handleDownloadList = async () => {
+        if (!selectedList || !selectedList.filePath) {
+            alert("ダウンロード可能なファイルが見つかりません。");
+            return;
+        }
+
+        try {
+            // Fetch the file as a blob from the server
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/${selectedList.filePath}`, {
+                responseType: 'blob',
+            });
+
+            // Create a Blob URL for the file
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+
+            // Create a temporary link element for downloading
+            const link = document.createElement('a');
+            link.href = url;
+            const now = new Date();
+            const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+            const fileName = `${selectedList.projectName || 'MyProject'}_${formattedDate}.csv`;
+            link.setAttribute('download', fileName);
+            // Trigger the download
+            document.body.appendChild(link);
+            link.click();
+
+            // Clean up the temporary link
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url); // Release the Blob URL
+        } catch (error) {
+            console.error("Error downloading the file:", error);
+            alert("ファイルのダウンロード中にエラーが発生しました。");
+        }
     };
 
     if (loading) {
@@ -296,12 +350,12 @@ const ListDeliveryTable = () => {
                     onSave={handleSaveSelectedList}
                     onChangeFlag={handleChangeFlag}
                     onDelete={() => { }}
-                    onDownloadList={() => { }}
+                    onDownloadList={handleDownloadList}
                     deleteFlag={false}
                     downloadFlag={selectedList.completeState > 1}
                 >
                     <h2 className="text-lg font-bold mb-4 text-gray-700">リスト詳細</h2>
-                    <div className="space-y-4">
+                    <div>
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">クライアント名</label>
                             <input
@@ -334,15 +388,24 @@ const ListDeliveryTable = () => {
                                 readOnly={isReadOnly}
                             />
                         </div>
+                        <div className="flex">
+                            <label className="block text-gray-700 min-w-40">希望件数</label>
+                            <input
+                                type="text"
+                                value={selectedList.wishNum}
+                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
+                                readOnly={isReadOnly}
+                            />
+                        </div>
                         {(selectedList.category == 'グリーン') && (
-                            <div className="flex">
+                            <div className="flex py-2">
                                 <label htmlFor="main_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
                                 <button
                                     onClick={() => {
                                         setIsCheckBoxModalOpen(true)
                                         setCurrentCondition("main_condition")
                                     }}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    className="bg-blue-500 text-white px-4 py-2 text-sm rounded hover:bg-blue-600"
                                 >
                                     データを表示
                                 </button>
@@ -357,14 +420,14 @@ const ListDeliveryTable = () => {
                             </div>
                         )}
                         {(selectedList.category == 'ブルー') && (
-                            <div>
-                                <label htmlFor="detail_condition_confirm" className="block mb-2 text-base font-medium text-gray-700">条件の絞り込み</label>
+                            <div className="flex py-2">
+                                <label htmlFor="detail_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">条件の絞り込み</label>
                                 <button
                                     onClick={() => {
                                         setIsCheckBoxModalOpen(true)
                                         setCurrentCondition("detail_condition")
                                     }}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    className="bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
                                 >
                                     データを表示
                                 </button>
@@ -379,7 +442,7 @@ const ListDeliveryTable = () => {
                             </div>
                         )}
                         {(selectedList.category == 'グリーン') && (
-                            <div className="flex">
+                            <div className="flex py-2">
                                 <label htmlFor="sub_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
                                 <button
                                     onClick={() => {
@@ -400,14 +463,14 @@ const ListDeliveryTable = () => {
                                 />
                             </div>
                         )}
-                        <div className="flex">
+                        <div className="flex pb-2">
                             <label className="block text-gray-700 min-w-40">エリアの絞り込み</label>
                             <button
                                 onClick={() => {
                                     setIsCheckBoxModalOpen(true)
                                     setCurrentCondition("area_condition")
                                 }}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                className="bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
 
                             >
                                 データを表示
@@ -454,7 +517,7 @@ const ListDeliveryTable = () => {
                             </div>
                         )}
                         <div className="flex">
-                        <label className="block text-gray-700 min-w-40">{(selectedList.category == 'ピンク') ? '市区' : 'その他備考'}</label>
+                            <label className="block text-gray-700 min-w-40">{(selectedList.category == 'ピンク') ? '市区' : 'その他備考'}</label>
                             <textarea
                                 value={selectedList.areaMemo}
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 min-h-24"

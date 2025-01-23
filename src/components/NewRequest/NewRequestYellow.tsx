@@ -33,6 +33,7 @@ const NewRequestYellow: React.FC = () => {
     const [areaMemo, setAreaMemo] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
+    const [wishNum, setWishNum] = useState(0);
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
     const [portalSite, setPortalSite] = useState("");
@@ -86,7 +87,7 @@ const NewRequestYellow: React.FC = () => {
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async ({completeState} : {completeState: number}) => {
         const token = localStorage.getItem('listan_token');
         if (!token) {
             alert('ユーザーは認証されていません。ログインしてください。');
@@ -109,62 +110,16 @@ const NewRequestYellow: React.FC = () => {
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName,
+            wishNum,
             areaSelection: selectedValues.area_condition || {},
             portalSite,
             areaMemo,
-            completeState: 1,
+            completeState,
         };
-
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request_yellow`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Request saved successfully:', data);
-                router.push("/list_request")
-            } else {
-                console.error('Failed to save request:', response.statusText);
-                alert('保存に失敗しました');
-            }
-        } catch (error) {
-            console.error('Error saving request:', error);
-            alert('保存中にエラーが発生しました。');
-        }
-    }
-    const handleSubmitPreSave = async () => {
-        const token = localStorage.getItem('listan_token');
-        if (!token) {
-            alert('ユーザーは認証されていません。ログインしてください。');
+        if(projectName === "" || wishNum < 1 || portalSite === "" || Object.keys(requestData.areaSelection).length === 0){
+            alert("必須項目を入力してください。");
             return;
         }
-
-        let userId;
-        try {
-            // Decode the token to extract user information
-            const decodedToken = jwtDecode<DecodedToken>(token) // jwtDecode automatically decodes the token
-            userId = decodedToken.id; // Extract the user ID
-        } catch (error) {
-            console.error('Error decoding token:', error);
-            alert('トークンが無効です。もう一度ログインしてください。');
-            return;
-        }
-
-        const selectedValues = getSelectedValues();
-        const requestData = {
-            userId: userId, // Replace with the actual user ID
-            projectName,
-            areaSelection: selectedValues.area_condition || {},
-            areaMemo,
-            portalSite,
-            completeState: 0,
-        };
-
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request_yellow`, {
                 method: 'POST',
@@ -192,14 +147,29 @@ const NewRequestYellow: React.FC = () => {
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
                 <div className="my-4">
-                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名</label>
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名<span className="text-red-500 text-sm ml-2">※</span></label>
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => { setProjectName(e.target.value) }}
                         value={projectName}
                         required />
                 </div>
+                <div>
                 <div className="my-4">
-                    <label htmlFor="potal_sites" className="block mb-2 text-base font-base text-black">ポータルサイト</label>
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">希望件数<span className="text-red-500 text-sm ml-2">※</span></label>
+                    <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
+                        onChange={(e) => {
+                            let value = e.target.value;
+                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
+                            const intValue = Number(value);
+                            setWishNum(intValue);
+                        }}
+                        value={wishNum}
+                        required
+                    />
+                </div>
+            </div>
+                <div className="my-4">
+                    <label htmlFor="potal_sites" className="block mb-2 text-base font-base text-black">ポータルサイト<span className="text-red-500 text-sm ml-2">※</span></label>
                     <select id="potal_sites" 
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     onChange={(e)=>(setPortalSite(e.target.value))}
@@ -215,7 +185,7 @@ const NewRequestYellow: React.FC = () => {
             {datasets.map((dataset, datasetIndex) => (
                 <div key={datasetIndex}>
                     <div className="flex">
-                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
                                 const prefix = `${dataset.name}-`;
@@ -331,7 +301,7 @@ const NewRequestYellow: React.FC = () => {
                     <div>
                         <div className="relative z-20 bg-white border-gray-300">
                             <div className="my-4">
-                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">プロジェクト名</label>
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">プロジェクト名<span className="text-red-500 text-sm ml-2">※</span></label>
                                 <input type="text" id="project_name_confirm"
                                     className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     onChange={(e) => { setProjectName(e.target.value) }}
@@ -341,8 +311,17 @@ const NewRequestYellow: React.FC = () => {
                                 />
                             </div>
                             <div className="my-4">
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">希望件数<span className="text-red-500 text-sm ml-2">※</span></label>
+                                <input type="number" id="project_name_confirm"
+                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                                    value={wishNum}
+                                    required
+                                    readOnly
+                                />
+                            </div>
+                            <div className="my-4">
                                 <div className="my-4">
-                                    <label htmlFor="tags" className="block mb-2 text-base font-base text-black">ポータルサイト</label>
+                                    <label htmlFor="tags" className="block mb-2 text-base font-base text-black">ポータルサイト<span className="text-red-500 text-sm ml-2">※</span></label>
                                     <input type="text"
                                         className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                         value={portalSite}
@@ -352,7 +331,7 @@ const NewRequestYellow: React.FC = () => {
                             </div>
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
-                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
@@ -398,7 +377,7 @@ const NewRequestYellow: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmitPreSave();
+                                handleSubmit({completeState: 0});
                             }}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mx-4"
                         >
@@ -407,7 +386,7 @@ const NewRequestYellow: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit();
+                                handleSubmit({completeState: 1});
                             }}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-4"
                         >
