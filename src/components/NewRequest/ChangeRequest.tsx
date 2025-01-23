@@ -32,6 +32,7 @@ interface RequestList {
     id: number;
     requestRandId: string;
     projectName: string;
+    wishNum: number;
     completeState: number;
     areaSelection: Record<string, any>;
     areaMemo: string
@@ -65,6 +66,7 @@ const ChangeRequest: React.FC = () => {
     const [currentRequest, setCurrentRequest] = useState<RequestList | null>(null);
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
+    const [wishNum, setWishNum] = useState(0);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -217,7 +219,7 @@ const ChangeRequest: React.FC = () => {
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async ({ completeState }: { completeState: number }) => {
         const token = localStorage.getItem('listan_token');
         if (!token) {
             alert('ユーザーは認証されていません。ログインしてください。');
@@ -241,12 +243,17 @@ const ChangeRequest: React.FC = () => {
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName: currentRequest?.projectName,
+            wishNum: currentRequest?.wishNum,
             mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
             subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
             areaMemo,
-            completeState: 1,
+            completeState,
         };
+        if (requestData.projectName === "" || (requestData?.wishNum ?? 0) < 1 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0) {
+            alert("必須項目を入力してください。");
+            return;
+        }
 
         try {
             const response = await axios.put(
@@ -272,72 +279,17 @@ const ChangeRequest: React.FC = () => {
             alert('保存中にエラーが発生しました。');
         }
     }
-    const handleSubmitPreSave = async () => {
-        const token = localStorage.getItem('listan_token');
-        if (!token) {
-            alert('ユーザーは認証されていません。ログインしてください。');
-            return;
-        }
 
-        let userId;
-        try {
-            // Decode the token to extract user information
-            const decodedToken = jwtDecode<DecodedToken>(token) // jwtDecode automatically decodes the token
-            userId = decodedToken.id; // Extract the user ID
-        } catch (error) {
-            console.error('Error decoding token:', error);
-            alert('トークンが無効です。もう一度ログインしてください。');
-            return;
-        }
-
-        const selectedValues = getSelectedValues();
-        console.log('Selected values:', selectedValues);
-
-        const requestData = {
-            userId: userId, // Replace with the actual user ID
-            projectName: currentRequest?.projectName,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
-            areaSelection: selectedValues.area_condition || {},
-            areaMemo: currentRequest?.areaMemo,
-            completeState: 0,
-        };
-
-        try {
-            const response = await axios.put(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/update_request/${currentRequest?.id}`,
-                requestData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // Include token for authentication
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            if (response.status === 200) {
-                console.log('Request saved successfully:', response.data);
-                router.push("/list_request");
-            } else {
-                console.error('Failed to save request:', response.statusText);
-                alert('保存に失敗しました');
-            }
-        } catch (error) {
-            console.error('Error saving request:', error);
-            alert('保存中にエラーが発生しました。');
-        }
-    }
     if (loading) {
         return (
             <Loader />
         )
     }
     return (
-
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
                 <div className="my-4">
-                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名</label>
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名<span className="text-red-500 text-sm ml-2">※</span></label>
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => {
                             setCurrentRequest((prev) => prev ? ({
@@ -348,11 +300,38 @@ const ChangeRequest: React.FC = () => {
                         value={currentRequest?.projectName || ''}
                         required />
                 </div>
+                <div className="my-4">
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">希望件数<span className="text-red-500 text-sm ml-2">※</span></label>
+                    <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
+                        onChange={(e) => {
+                            let value = e.target.value;
+                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
+                            const intValue = Number(value);
+                            setCurrentRequest((prev) => prev ? ({
+                                ...prev,
+                                wishNum: intValue,
+                            }) : prev);
+                        }}
+                        value={currentRequest?.wishNum || '0'}
+                        required />
+                </div>
             </div>
             {datasets.map((dataset, datasetIndex) => (
                 <div key={datasetIndex}>
                     <div className="flex">
-                        <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                        <h2 className="text-lg font-base text-black my-4">
+                            {dataset.name === "main_condition" ? (
+                                <>
+                                    業種の絞り込み<span className="text-red-500 text-sm ml-2">※</span>
+                                </>
+                            ) : dataset.name === "sub_condition" ? (
+                                "その他条件の絞り込み"
+                            ) : (
+                                <>
+                                    エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span>
+                                </>
+                            )}
+                        </h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
                                 const prefix = `${dataset.name}-`;
@@ -481,9 +460,30 @@ const ChangeRequest: React.FC = () => {
                                     readOnly
                                 />
                             </div>
+                            <div className="my-4">
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">希望件数</label>
+                                <input type="number" id="project_name_confirm"
+                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                                    value={currentRequest?.wishNum}
+                                    required
+                                    readOnly
+                                />
+                            </div>
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
-                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "main_condition") ? "業種の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                                    <h2 className="text-lg font-base text-black my-4">
+                                        {dataset.name === "main_condition" ? (
+                                            <>
+                                                業種の絞り込み<span className="text-red-500 text-sm ml-2">※</span>
+                                            </>
+                                        ) : dataset.name === "sub_condition" ? (
+                                            "その他条件の絞り込み"
+                                        ) : (
+                                            <>
+                                                エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span>
+                                            </>
+                                        )}
+                                    </h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
@@ -529,7 +529,7 @@ const ChangeRequest: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmitPreSave();
+                                handleSubmit({ completeState: 0 });
                             }}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mx-4"
                         >
@@ -538,7 +538,7 @@ const ChangeRequest: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit();
+                                handleSubmit({ completeState: 1 });
                             }}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-4"
                         >

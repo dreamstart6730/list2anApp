@@ -33,6 +33,7 @@ interface RequestList {
     id: number;
     requestRandId: string;
     projectName: string;
+    wishNum: number;
     completeState: number;
     areaSelection: Record<string, any>;
     areaMemo: string;
@@ -60,6 +61,7 @@ const ChangeRequestYellow: React.FC = () => {
     const [areaMemo, setAreaMemo] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
+    const [wishNum, setWishNum] = useState(0);
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
     const [currentRequest, setCurrentRequest] = useState<RequestList | null>(null);
@@ -219,12 +221,16 @@ const ChangeRequestYellow: React.FC = () => {
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName: currentRequest?.projectName,
+            wishNum: currentRequest?.wishNum,
             areaSelection: selectedValues.area_condition || {},
             portalSite: currentRequest?.portalSite,
             areaMemo: currentRequest?.areaMemo,
             completeState,
         };
-
+        if(requestData.projectName === "" || (requestData.wishNum ?? 0) < 1 || requestData.portalSite === "" || Object.keys(requestData.areaSelection).length === 0){
+            alert("必須項目を入力してください。");
+            return;
+        }
         try {
             const response = await axios.put(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/update_request_yellow/${currentRequest?.id}`,
@@ -254,7 +260,7 @@ const ChangeRequestYellow: React.FC = () => {
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
                 <div className="my-4">
-                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名</label>
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">プロジェクト名<span className="text-red-500 text-sm ml-2">※</span></label>
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => {
                             setCurrentRequest((prev) => prev ? ({
@@ -266,110 +272,127 @@ const ChangeRequestYellow: React.FC = () => {
                         required />
                 </div>
                 <div className="my-4">
-                    <label htmlFor="potal_sites" className="block mb-2 text-base font-base text-black">ポータルサイト</label>
-                    <select id="potal_sites"
+                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">希望件数<span className="text-red-500 text-sm ml-2">※</span></label>
+                    <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
+                        onChange={(e) => {
+                            let value = e.target.value;
+                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
+                            const intValue = Number(value);
+                            setCurrentRequest((prev) => prev ? ({
+                                ...prev,
+                                wishNum: intValue,
+                            }) : prev);
+                        }}
+                        value={currentRequest?.wishNum || '0'}
+                        required />
+                </div>
+                <div className="my-4">
+                    <label htmlFor="potal_sites" className="block mb-2 text-base font-base text-black">ポータルサイト<span className="text-red-500 text-sm ml-2">※</span></label>
+                    <select
+                        id="potal_sites"
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                        onChange={(e) => (setCurrentRequest((prev) => prev ? ({
+                        value={currentRequest?.portalSite || ""}
+                        onChange={(e) => setCurrentRequest((prev) => prev ? ({
                             ...prev,
                             portalSite: e.target.value,
-                        }) : prev))}
+                        }) : prev)}
                     >
-                    {portalSites.map((item, itemIndex) => (
-                        <option value={item} key={"portalSitesIndex-" + itemIndex} selected={item === currentRequest?.portalSite}>
-                            {(itemIndex) ? itemIndex : ""}　　{item}
-                        </option>
-                    ))}
-                </select>
-            </div>
-        </div>
-            {
-        datasets.map((dataset, datasetIndex) => (
-            <div key={datasetIndex}>
-                <div className="flex">
-                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
-                    <button className="text-blue-500 ml-4"
-                        onClick={() => {
-                            const prefix = `${dataset.name}-`;
-
-                            setCheckedCategories((prev) => {
-                                const newCheckedCategories = { ...prev };
-                                Object.keys(newCheckedCategories).forEach(key => {
-                                    if (key.startsWith(prefix)) {
-                                        delete newCheckedCategories[key];
-                                    }
-                                });
-                                return newCheckedCategories;
-                            });
-
-                            setCheckedItems((prev) => {
-                                const newCheckedItems = { ...prev };
-                                Object.keys(newCheckedItems).forEach(key => {
-                                    if (key.startsWith(prefix)) {
-                                        delete newCheckedItems[key];
-                                    }
-                                });
-                                return newCheckedItems;
-                            });
-                        }}
-                    >
-                        条件リセット
-                    </button>
+                        {portalSites.map((item, itemIndex) => (
+                            <option value={item} key={"portalSitesIndex-" + itemIndex}>
+                                {(itemIndex) ? itemIndex : ""}　　{item}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <table className="w-full border-collapse border border-gray-700">
-                    <tbody>
-                        {dataset.data.map((item: RequestGroup, index: number) => (
-                            <tr key={index} className="even:bg-white odd:bg-gray-200 text-black">
-                                <td className="border border-gray-700 p-2 align-top min-w-16">
-                                    <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id={`category-${dataset.name}-${item.category}`}
-                                            checked={checkedCategories[`${dataset.name}-${item.category}`] || false}
-                                            onChange={() =>
-                                                handleCategoryCheckboxChange(dataset.name, item.category, item.options)
+            </div>
+            {
+                datasets.map((dataset, datasetIndex) => (
+                    <div key={datasetIndex}>
+                        <div className="flex">
+                            <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
+                            <button className="text-blue-500 ml-4"
+                                onClick={() => {
+                                    const prefix = `${dataset.name}-`;
+
+                                    setCheckedCategories((prev) => {
+                                        const newCheckedCategories = { ...prev };
+                                        Object.keys(newCheckedCategories).forEach(key => {
+                                            if (key.startsWith(prefix)) {
+                                                delete newCheckedCategories[key];
                                             }
-                                            className="form-checkbox text-blue-500 mr-2"
-                                        />
-                                        <label
-                                            htmlFor={`category-${dataset.name}-${item.category}`}
-                                            className="cursor-pointer"
-                                        >
-                                            {item.category}
-                                        </label>
-                                    </div>
-                                </td>
-                                <td className="border border-gray-700 p-2">
-                                    <ul className="flex flex-wrap list-none">
-                                        {item.options.map((option: string, idx: number) => (
-                                            <li key={idx} className="flex items-center mx-4">
+                                        });
+                                        return newCheckedCategories;
+                                    });
+
+                                    setCheckedItems((prev) => {
+                                        const newCheckedItems = { ...prev };
+                                        Object.keys(newCheckedItems).forEach(key => {
+                                            if (key.startsWith(prefix)) {
+                                                delete newCheckedItems[key];
+                                            }
+                                        });
+                                        return newCheckedItems;
+                                    });
+                                }}
+                            >
+                                条件リセット
+                            </button>
+                        </div>
+                        <table className="w-full border-collapse border border-gray-700">
+                            <tbody>
+                                {dataset.data.map((item: RequestGroup, index: number) => (
+                                    <tr key={index} className="even:bg-white odd:bg-gray-200 text-black">
+                                        <td className="border border-gray-700 p-2 align-top min-w-16">
+                                            <div className="flex items-center">
                                                 <input
                                                     type="checkbox"
-                                                    id={`${dataset.name}-${item.category}-${option}`}
-                                                    checked={
-                                                        checkedItems[`${dataset.name}-${item.category}`]?.[option] || false
-                                                    }
+                                                    id={`category-${dataset.name}-${item.category}`}
+                                                    checked={checkedCategories[`${dataset.name}-${item.category}`] || false}
                                                     onChange={() =>
-                                                        handleCheckboxChange(dataset.name, item.category, option)
+                                                        handleCategoryCheckboxChange(dataset.name, item.category, item.options)
                                                     }
-                                                    className="form-checkbox text-blue-500"
+                                                    className="form-checkbox text-blue-500 mr-2"
                                                 />
                                                 <label
-                                                    htmlFor={`${dataset.name}-${item.category}-${option}`}
-                                                    className="cursor-pointer ml-2"
+                                                    htmlFor={`category-${dataset.name}-${item.category}`}
+                                                    className="cursor-pointer"
                                                 >
-                                                    {option}
+                                                    {item.category}
                                                 </label>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        ))
-    }
+                                            </div>
+                                        </td>
+                                        <td className="border border-gray-700 p-2">
+                                            <ul className="flex flex-wrap list-none">
+                                                {item.options.map((option: string, idx: number) => (
+                                                    <li key={idx} className="flex items-center mx-4">
+                                                        <input
+                                                            type="checkbox"
+                                                            id={`${dataset.name}-${item.category}-${option}`}
+                                                            checked={
+                                                                checkedItems[`${dataset.name}-${item.category}`]?.[option] || false
+                                                            }
+                                                            onChange={() =>
+                                                                handleCheckboxChange(dataset.name, item.category, option)
+                                                            }
+                                                            className="form-checkbox text-blue-500"
+                                                        />
+                                                        <label
+                                                            htmlFor={`${dataset.name}-${item.category}-${option}`}
+                                                            className="cursor-pointer ml-2"
+                                                        >
+                                                            {option}
+                                                        </label>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ))
+            }
             <div>
                 <div className="my-4">
                     <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">その他備考</label>
@@ -408,7 +431,7 @@ const ChangeRequestYellow: React.FC = () => {
                     <div>
                         <div className="relative z-20 bg-white border-gray-300">
                             <div className="my-4">
-                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">プロジェクト名</label>
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">プロジェクト名<span className="text-red-500 text-sm ml-2">※</span></label>
                                 <input type="text" id="project_name_confirm"
                                     className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                     onChange={(e) => { setProjectName(e.target.value) }}
@@ -418,8 +441,17 @@ const ChangeRequestYellow: React.FC = () => {
                                 />
                             </div>
                             <div className="my-4">
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">希望件数<span className="text-red-500 text-sm ml-2">※</span></label>
+                                <input type="number" id="project_name_confirm"
+                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                                    value={currentRequest?.wishNum}
+                                    required
+                                    readOnly
+                                />
+                            </div>
+                            <div className="my-4">
                                 <div className="my-4">
-                                    <label htmlFor="tags" className="block mb-2 text-base font-base text-black">ポータルサイト</label>
+                                    <label htmlFor="tags" className="block mb-2 text-base font-base text-black">ポータルサイト<span className="text-red-500 text-sm ml-2">※</span></label>
                                     <input type="text"
                                         className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
                                         value={currentRequest?.portalSite}
@@ -429,7 +461,7 @@ const ChangeRequestYellow: React.FC = () => {
                             </div>
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
-                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : "エリアの絞り込み"}</h2>
+                                    <h2 className="text-lg font-base text-black my-4">{(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
