@@ -182,7 +182,7 @@ const ListDeliveryTable = () => {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            let updatedRequest = response.data.updatedRequest;
+            const updatedRequest = response.data.updatedRequest;
             updatedRequest.category = selectedList.category;
             // Update the selected list and request lists
             setSelectedList((prev) => (prev && (prev.id === updatedRequest.id && prev.category === updatedRequest.category) ? updatedRequest : prev));
