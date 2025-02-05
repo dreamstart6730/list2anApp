@@ -23,12 +23,13 @@ interface Dataset {
 }
 
 const GroupCheckBox: React.FC<ModalProps> = ({ isOpen, onClose, dataset, current_condition, checkedCategories, checkedItems }) => {
-    console.log("GroupCheckBox",  checkedCategories, checkedItems);
+    console.log("GroupCheckBox-dataset",  dataset);
+    console.log("GroupCheckBox-checkedItems",  checkedItems);
     if (!isOpen || current_condition != dataset.name) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex text-sm items-center justify-center bg-black bg-opacity-50">
-            <div className="relative bg-white rounded-lg shadow-lg p-6 pt-10 w-full max-w-7xl">
+        <div className="fixed inset-0 z-50 flex text-sm items-center justify-center bg-black bg-opacity-50 max-h-full overflow-auto no-scrollbar">
+            <div className="relative bg-white rounded-lg shadow-lg p-6 pt-10 w-full max-w-7xl max-h-full overflow-auto no-scrollbar">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-black hover:text-gray-300"

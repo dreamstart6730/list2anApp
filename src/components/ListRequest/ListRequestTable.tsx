@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Loader from "@/components/common/Loader";
 import DetailModal from "@/components/common/Loader/DetailModal";
-import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3, requestGroupCheckData4 } from "@/constant/RequestGroup";
+import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3, requestGroupCheckData4, requestGroupCheckData5 } from "@/constant/RequestGroup";
 import RequestCategoryModal from "./RequestCategoryModal";
 import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
@@ -20,6 +20,7 @@ interface RequestList {
     detailCondition: Record<string, any>;
     completeState: number;
     areaSelection: Record<string, any>;
+    workSelection: Record<string, any>;
     areaMemo: string
     mainCondition: Record<string, any>;
     subCondition: Record<string, any>;
@@ -121,12 +122,14 @@ const ListRequestTable = () => {
                 const requestsBlue = response.data.requestsBlue.map((request: RequestList) => ({ ...request, category: 'ブルー' }));
                 const requestsPink = response.data.requestsPink.map((request: RequestList) => ({ ...request, category: 'ピンク' }));
                 const requestsYellow = response.data.requestsYellow.map((request: RequestList) => ({ ...request, category: 'イエロー' }));
+                const requestsRed = response.data.requestsRed.map((request: RequestList) => ({ ...request, category: 'レッド' }));
 
                 const combinedRequests = [
                     ...requests,
                     ...requestsBlue,
                     ...requestsPink,
-                    ...requestsYellow
+                    ...requestsYellow,
+                    ...requestsRed,
                 ];
 
                 setRequestLists(combinedRequests);
@@ -155,6 +158,9 @@ const ListRequestTable = () => {
                     break;
                 case 'ピンク':
                     router.push(`/request_change_pink?requestId=${selectedList.id}`);
+                    break;
+                case 'レッド':
+                    router.push(`/request_change_red?requestId=${selectedList.id}`);
                     break;
                 default:
                     console.log("Unknown category");
@@ -257,6 +263,16 @@ const ListRequestTable = () => {
                     case 'ピンク':
                         response = await axios.delete(
                             `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request_pink/${selectedList.id}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${token}`, // Include token for authentication
+                                },
+                            }
+                        );
+                        break;
+                    case 'レッド':
+                        response = await axios.delete(
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/delete_request_red/${selectedList.id}`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${token}`, // Include token for authentication
@@ -422,15 +438,16 @@ const ListRequestTable = () => {
                                 readOnly={isReadOnly}
                             />
                         </div>
-                        <div className="flex">
-                            <label className="block text-gray-700 min-w-40">希望件数</label>
-                            <input
-                                type="text"
-                                value={selectedList.wishNum}
-                                className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
-                                readOnly={isReadOnly}
-                            />
-                        </div>
+                        {(selectedList.category != 'レッド') && (
+                            <div className="flex">
+                                <label className="block text-gray-700 min-w-40">希望件数</label>
+                                <input
+                                    type="text"
+                                    value={selectedList.wishNum}
+                                    className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
+                                    readOnly={isReadOnly}
+                                />
+                            </div>)}
                         {(selectedList.category == 'グリーン') && (
                             <div className="flex">
                                 <label htmlFor="main_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
@@ -497,6 +514,28 @@ const ListRequestTable = () => {
                                 />
                             </div>
                         )}
+                        {(selectedList.category == 'レッド') && (
+                            <div className="flex">
+                                <label htmlFor="sub_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">業種</label>
+                                <button
+                                    onClick={() => {
+                                        setIsCheckBoxModalOpen(true)
+                                        setCurrentCondition("work_condition")
+                                    }}
+                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                >
+                                    データを表示
+                                </button>
+                                <GroupCheckBox
+                                    isOpen={isCheckBoxModalOpen}
+                                    onClose={() => setIsCheckBoxModalOpen(false)}
+                                    dataset={{ name: "work_condition", data: requestGroupCheckData5 }}
+                                    current_condition={currentCondition}
+                                    checkedCategories={transformData(selectedList.workSelection, requestGroupCheckData5, "work_condition").checkedCategories}
+                                    checkedItems={transformData(selectedList.workSelection, requestGroupCheckData5, "work_condition").checkedItems}
+                                />
+                            </div>
+                        )}
                         <div className="flex">
                             <label className="min-w-40 block text-gray-700 min-w-40">エリアの絞り込み</label>
                             <button
@@ -550,19 +589,20 @@ const ListRequestTable = () => {
                                 />
                             </div>
                         )}
-                        <div className="flex">
-                            <label className="block text-gray-700 min-w-40">{(selectedList.category == 'ピンク') ? '市区' : 'その他備考'}</label>
-                            <textarea
-                                value={selectedList.areaMemo}
-                                className={`bg-gray-200 text-gray-900 text-sm rounded-lg focus:outline-none focus:border-gray-500 w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
-                                readOnly={isReadOnly}
-                                onChange={(e) => {
-                                    setSelectedList((prev) => ({
-                                        ...prev, areaMemo: e.target.value
-                                    } as RequestList))
-                                }}
-                            />
-                        </div>
+                        {(selectedList.category != 'レッド') && (
+                            <div className="flex">
+                                <label className="block text-gray-700 min-w-40">{(selectedList.category == 'ピンク') ? '市区' : 'その他備考'}</label>
+                                <textarea
+                                    value={selectedList.areaMemo}
+                                    className={`bg-gray-200 text-gray-900 text-sm rounded-lg focus:outline-none focus:border-gray-500 w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24 ${isReadOnly ? "bg-gray-200" : "cursor-text"}`}
+                                    readOnly={isReadOnly}
+                                    onChange={(e) => {
+                                        setSelectedList((prev) => ({
+                                            ...prev, areaMemo: e.target.value
+                                        } as RequestList))
+                                    }}
+                                />
+                            </div>)}
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">リスト数</label>
                             <input
