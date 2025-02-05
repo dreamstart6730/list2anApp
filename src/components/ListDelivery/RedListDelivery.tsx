@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Loader from "@/components/common/Loader";
-import DetailModal from "@/components/common/Loader/DetailModal";
+import DetailModalRed from "@/components/common/Loader/DetailModalRed";
 import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3, requestGroupCheckData4, requestGroupCheckData5 } from "@/constant/RequestGroup";
 import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
@@ -53,7 +53,15 @@ interface RequestGroupCheckData {
     options: string[];
 }
 
-const ListDeliveryTable = () => {
+interface RedListDeliveryTableProps {
+    bigCategory: string;
+    smallCategory: string;
+    area: string;
+    state: string;
+    updatedDate: Date;
+}
+
+const RedListDeliveryTable = () => {
     const [requestLists, setRequestLists] = useState<RequestList[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -66,6 +74,7 @@ const ListDeliveryTable = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentCondition, setCurrentCondition] = useState("");
+    const [redItems, setRedItems] = useState<RedListDeliveryTableProps[]>([]);
 
     const transformData = (
         input: Record<string, string[]>,
@@ -114,21 +123,39 @@ const ListDeliveryTable = () => {
                         headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
                     }
                 );
-                const requests = response.data.requests.map((request: RequestList) => ({ ...request, category: 'グリーン' }));
-                const requestsBlue = response.data.requestsBlue.map((request: RequestList) => ({ ...request, category: 'ブルー' }));
-                const requestsPink = response.data.requestsPink.map((request: RequestList) => ({ ...request, category: 'ピンク' }));
-                const requestsYellow = response.data.requestsYellow.map((request: RequestList) => ({ ...request, category: 'イエロー' }));
-                // const requestsRed = response.data.requestsRed.map((request: RequestList) => ({ ...request, category: 'レッド' }));
+                const requestsRed = response.data.requestsRed.map((request: RequestList) => ({ ...request, category: 'レッド' }));
                 const combinedRequests = [
-                    ...requests,
-                    ...requestsBlue,
-                    ...requestsPink,
-                    ...requestsYellow,
-                    // ...requestsRed,
+                    ...requestsRed,
                 ];
 
-                setRequestLists(combinedRequests);
-                console.log("Fetched requests:", response.data.requests);
+                // setRequestLists(combinedRequests);
+                combinedRequests.map((request) => {
+                    const tp_areaSelection = request.areaSelection;
+                    const tp_workSelection = request.workSelection;
+
+                    Object.keys(tp_areaSelection).forEach((areaKey: string) => {
+                        tp_areaSelection[areaKey].forEach((area: string) => {
+                            Object.keys(tp_workSelection).forEach((categoryKey: string) => {
+                                tp_workSelection[categoryKey].forEach((item: string) => {
+                                    console.log(item);
+                                    console.log()
+                                    const itemNotFound = redItems.find(redItem => redItem.smallCategory === item && redItem.area === area);
+                                    console.log(itemNotFound);
+                                    if (itemNotFound == undefined) {
+                                        redItems.push({
+                                            bigCategory: categoryKey,
+                                            smallCategory: item,
+                                            area: area,
+                                            state: "未登録",
+                                            updatedDate: new Date()
+                                        });
+                                    }
+                                    console.log("-------------------");
+                                });
+                            });
+                        });
+                    });
+                });
 
             } catch (error) {
                 console.log("Error fetching requests:", error);
@@ -367,41 +394,47 @@ const ListDeliveryTable = () => {
                         <thead>
                             <tr className="bg-gray-2 text-left">
                                 <th className="min-w-[40px] px-4 py-4 font-medium text-black">No</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">クライアント名</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">依頼ID</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">プロジェクト名</th>
-                                <th className="min-w-[120px] px-4 py-4 font-medium text-black">リスト数</th>
-                                <th className="px-4 py-4 font-medium text-black">リスト区分</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">大カテゴリ</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">小カテゴリ</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">エリア</th>
+                                {/* <th className="min-w-[120px] px-4 py-4 font-medium text-black">リスト数</th> */}
+                                {/* <th className="px-4 py-4 font-medium text-black">リスト区分</th> */}
                                 <th className="px-4 py-4 font-medium text-black">状況</th>
                                 <th className="px-4 py-4 font-medium text-black">更新日</th>
                                 <th className="px-4 py-4 font-medium text-black"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {requestLists.map((requestList, index) => (
-                                <tr key={requestList.id + requestList.category}>
+                            {redItems.map((redItem, index) => (
+                                <tr key={redItem.bigCategory + redItem.smallCategory + redItem.area} className="border-b">
                                     <td className="border-b px-4 py-5 text-black">{index + 1}</td>
-                                    <td className="border-b px-4 py-5 text-black">{requestList.user.name}</td>
-                                    <td className="border-b px-4 py-5 text-black">{requestList.requestRandId}</td>
-                                    <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
-                                    <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
-                                    <td className="border-b px-4 py-5 text-black">{requestList.category}</td>
-                                    <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
+                                    <td className="border-b px-4 py-5 text-black">{redItem.bigCategory}</td>
+                                    <td className="border-b px-4 py-5 text-black">{redItem.smallCategory}</td>
+                                    <td className="border-b px-4 py-5 text-black">{redItem.area}</td>
+                                    {/* <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td> */}
+                                    {/* <td className="border-b px-4 py-5 text-black">{requestList.category}</td> */}
+                                    <td className="border-b px-4 py-5 text-black">未登録</td>
                                     <td className="border-b px-4 py-5 text-black">
-                                        {requestList.createdAt
+                                        {redItem.updatedDate
                                             ? new Intl.DateTimeFormat("ja-JP", {
                                                 year: "numeric",
                                                 month: "long",
                                                 day: "numeric",
-                                            }).format(new Date(requestList.createdAt))
+                                            }).format(new Date(redItem.updatedDate))
                                             : "N/A"}
                                     </td>
                                     <td className="border-b px-4 py-5 text-white">
                                         <button
-                                            className="text-blue-500 hover:underline"
-                                            onClick={() => openDetailModal(requestList)}
+                                            className="text-blue-500 hover:underline mx-2"
+                                        // onClick={() => openDetailModal(requestList)}
                                         >
                                             詳細
+                                        </button>
+                                        <button
+                                            className="text-blue-500 hover:underline mx-2"
+                                        // onClick={() => openDetailModal(requestList)}
+                                        >
+                                            登録
                                         </button>
                                     </td>
                                 </tr>
@@ -413,7 +446,7 @@ const ListDeliveryTable = () => {
 
             {/* Detail Modal */}
             {selectedList && (
-                <DetailModal
+                <DetailModalRed
                     isOpen={isDetailModalOpen}
                     onClose={() => setIsDetailModalOpen(false)}
                     onSave={handleSaveSelectedList}
@@ -677,63 +710,11 @@ const ListDeliveryTable = () => {
                                 readOnly
                             />
                         </div>
-                        <div className="flex">
-                            <label className="block text-gray-700 min-w-40">ファイル名</label>
-                            <input
-                                type="text"
-                                value={selectedList.fileName}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                readOnly
-                            />
-                        </div>
                     </div>
-                    <div className="space-y-4 flex justify-between">
-                        <div className="flex flex-col">
-                            <label className="block text-gray-700 text-sm">CSV アップロード</label>
-                            {/* Hidden File Input */}
-                            <input
-                                type="file"
-                                accept=".csv"
-                                id="fileInput"
-                                className="hidden"
-                                onChange={(e) => handleFileSelection(e.target.files)}
-                            />
-                            {/* Custom Button to Trigger File Dialog */}
-                            <button
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500"
-                                onClick={() => document.getElementById("fileInput")?.click()}
-                            >
-                                {selectedFile ? selectedFile.name : "ファイルを選択"}
-                            </button>
-                        </div>
-                        <div className="flex justify-end items-center">
-                            {(selectedList?.cancelState < 1) ? (
-                                <button
-                                    className="mr-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                    onClick={handleCancelRequest}
-                                >
-                                    キャンセル
-                                </button>
-                            ) : (
-                                <button
-                                    className="mr-2 bg-gray-500 text-white px-4 py-2 rounded"
-                                    disabled
-                                >
-                                    キャンセル
-                                </button>
-                            )}
-                            <button
-                                className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-                                onClick={handleFileUpload}
-                            >
-                                納品
-                            </button>
-                        </div>
-                    </div>
-                </DetailModal>
+                </DetailModalRed>
             )}
         </>
     );
 };
 
-export default ListDeliveryTable;
+export default RedListDeliveryTable;

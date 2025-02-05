@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
+import { requestGroupCheckData4, requestGroupCheckData3, requestGroupCheckData5 } from "@/constant/RequestGroup";
 import LargeModal from "../common/Loader/LargeModal";
 import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import TagInput from "../common/Loader/TagInput";
 import { useRouter, useSearchParams } from "next/navigation";
 import Loader from "../common/Loader";
+
 
 interface RequestGroup {
     category: string;
@@ -21,13 +23,6 @@ interface DecodedToken {
     role: number;
 }
 
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    contractId: string;
-}
-
 interface RequestList {
     id: number;
     requestRandId: string;
@@ -35,6 +30,7 @@ interface RequestList {
     wishNum: number;
     completeState: number;
     areaSelection: Record<string, any>;
+    workSelection: Record<string, any>;
     areaMemo: string
     mainCondition: Record<string, any>;
     subCondition: Record<string, any>;
@@ -48,25 +44,29 @@ interface RequestList {
     user: User;
 }
 
-const ChangeRequest: React.FC = () => {
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    contractId: string;
+}
+
+const ChangeRequestRed: React.FC = () => {
     const datasets = [
-        { name: "main_condition", data: requestGroupCheckData },
-        { name: "sub_condition", data: requestGroupCheckData2 },
+        { name: "work_condition", data: requestGroupCheckData5 },
         { name: "area_condition", data: requestGroupCheckData3 }
     ];
 
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: { [key: string]: boolean } }>({});
     const [checkedCategories, setCheckedCategories] = useState<{ [key: string]: boolean }>({});
     const [areaSelection, setAreaSelection] = useState("");
-    const [areaMemo, setAreaMemo] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
-    const [mainCondition, setMainCondition] = useState("");
-    const [subCondition, setSubCondition] = useState("");
-    const [currentRequest, setCurrentRequest] = useState<RequestList | null>(null);
+    const [workCondition, setWorkCondition] = useState("");
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
-    const [wishNum, setWishNum] = useState(0);
+    const [currentRequest, setCurrentRequest] = useState<RequestList | null>(null);
+
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -95,6 +95,7 @@ const ChangeRequest: React.FC = () => {
 
         return { checkedCategories, checkedItems };
     };
+
     useEffect(() => {
         const fetchClients = async () => {
             const token = localStorage.getItem("listan_token");
@@ -113,7 +114,7 @@ const ChangeRequest: React.FC = () => {
             }
             try {
                 const response = await axios.get(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/request_get`,
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/request_get_red`,
                     {
                         params: {
                             userId,
@@ -122,31 +123,12 @@ const ChangeRequest: React.FC = () => {
                         headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
                     }
                 );
-                setCurrentRequest(response.data.request);
+                setCurrentRequest(response.data.requestRed);
                 let tp_checkedCategories = {};
                 let tp_checkedItems = {};
-                if (response.data.request.mainCondition) {
-                    const mainConditionData = transformData(
-                        response.data.request.mainCondition,
-                        requestGroupCheckData,
-                        "main_condition"
-                    );
-                    tp_checkedCategories = { ...tp_checkedCategories, ...mainConditionData.checkedCategories };
-                    tp_checkedItems = { ...tp_checkedItems, ...mainConditionData.checkedItems };
-                }
-                if (response.data.request.subCondition) {
-                    const subConditionData = transformData(
-                        response.data.request.subCondition,
-                        requestGroupCheckData2,
-                        "sub_condition"
-                    );
-                    tp_checkedCategories = { ...tp_checkedCategories, ...subConditionData.checkedCategories };
-                    tp_checkedItems = { ...tp_checkedItems, ...subConditionData.checkedItems };
-                }
-
-                if (response.data.request.areaSelection) {
+                if (response.data.requestRed.areaSelection) {
                     const areaConditionData = transformData(
-                        response.data.request.areaSelection, // Corrected from mainCondition to areaSelection
+                        response.data.requestRed.areaSelection, // Corrected from mainCondition to areaSelection
                         requestGroupCheckData3,
                         "area_condition"
                     );
@@ -154,11 +136,21 @@ const ChangeRequest: React.FC = () => {
                     tp_checkedCategories = { ...tp_checkedCategories, ...areaConditionData.checkedCategories };
                     tp_checkedItems = { ...tp_checkedItems, ...areaConditionData.checkedItems };
                 }
+                if (response.data.requestRed.workSelection) {
+                    const workConditionData = transformData(
+                        response.data.requestRed.workSelection, // Corrected from mainCondition to areaSelection
+                        requestGroupCheckData5,
+                        "work_condition"
+                    );
+
+                    tp_checkedCategories = { ...tp_checkedCategories, ...workConditionData.checkedCategories };
+                    tp_checkedItems = { ...tp_checkedItems, ...workConditionData.checkedItems };
+                }
                 console.log(tp_checkedCategories);
                 console.log(tp_checkedItems);
                 setCheckedCategories(tp_checkedCategories);
                 setCheckedItems(tp_checkedItems);
-                console.log("Fetched clients:", response.data.request);
+                console.log("Fetched clients:", response.data.requestRed);
 
             } catch (error) {
                 console.log("Error fetching clients:", error);
@@ -169,6 +161,7 @@ const ChangeRequest: React.FC = () => {
 
         fetchClients();
     }, [requestId]);
+
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
             ...prev,
@@ -211,31 +204,21 @@ const ChangeRequest: React.FC = () => {
         return selectedValues;
     };
 
-    // const confirmValues = () => {
-    //     console.log(checkedCategories)
-    //     const selectedValues = getSelectedValues();
-    //     setMainCondition(JSON.stringify(selectedValues.main_condition, null, 2))
-    //     setSubCondition(JSON.stringify(selectedValues.sub_condition, null, 2))
-    //     setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
-    // };
-
     const confirmValues = () => {
 
         const selectedValues = getSelectedValues();
         const requestData = {
             projectName: currentRequest?.projectName,
-            wishNum: currentRequest?.wishNum,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
+            wishNum: -1,
+            workCondition: selectedValues.work_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
-            areaMemo,
-       };
-        if(requestData.projectName === "" || (requestData?.wishNum ?? 0) < 1 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0){
+            areaMemo: "",
+        };
+        if (requestData.projectName === "" || Object.keys(requestData.areaSelection).length === 0 || Object.keys(requestData.workCondition).length === 0) {
             alert("必須項目を入力してください。");
             return 0;
         }
-        setMainCondition(JSON.stringify(selectedValues.main_condition, null, 2))
-        setSubCondition(JSON.stringify(selectedValues.sub_condition, null, 2))
+        setWorkCondition(JSON.stringify(selectedValues.work_condition, null, 2))
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
         return 1;
     };
@@ -259,38 +242,34 @@ const ChangeRequest: React.FC = () => {
         }
 
         const selectedValues = getSelectedValues();
-        // console.log('Selected values:', selectedValues);
+        console.log('Selected values:', selectedValues);
 
         const requestData = {
             userId: userId, // Replace with the actual user ID
             projectName: currentRequest?.projectName,
-            wishNum: currentRequest?.wishNum,
-            mainCondition: selectedValues.main_condition || {}, // Ensure it's an object
-            subCondition: selectedValues.sub_condition || {}, // Ensure it's an object
+            wishNum: -1,
+            workSelection: selectedValues.work_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
-            areaMemo,
+            areaMemo: "",
             completeState,
         };
-        if (requestData.projectName === "" || (requestData?.wishNum ?? 0) < 1 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0) {
+        if (requestData.projectName === "" || Object.keys(requestData.areaSelection).length === 0 || Object.keys(requestData.workSelection).length === 0) {
             alert("必須項目を入力してください。");
             return;
         }
-
         try {
-            const response = await axios.put(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/update_request/${currentRequest?.id}`,
-                requestData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // Include token for authentication
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request_red`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData),
+            });
 
-            if (response.status === 200) {
-                console.log('Request saved successfully:', response.data);
-                router.push("/list_request");
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Request saved successfully:', data);
+                router.push("/list_request")
             } else {
                 console.error('Failed to save request:', response.statusText);
                 alert('保存に失敗しました');
@@ -301,11 +280,6 @@ const ChangeRequest: React.FC = () => {
         }
     }
 
-    if (loading) {
-        return (
-            <Loader />
-        )
-    }
     return (
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
@@ -321,37 +295,12 @@ const ChangeRequest: React.FC = () => {
                         value={currentRequest?.projectName || ''}
                         required />
                 </div>
-                <div className="my-4">
-                    <label htmlFor="project_name" className="block mb-2 text-base font-base text-balck">希望件数<span className="text-red-500 text-sm ml-2">※</span></label>
-                    <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
-                        onChange={(e) => {
-                            let value = e.target.value;
-                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
-                            const intValue = Number(value);
-                            setCurrentRequest((prev) => prev ? ({
-                                ...prev,
-                                wishNum: intValue,
-                            }) : prev);
-                        }}
-                        value={currentRequest?.wishNum || '0'}
-                        required />
-                </div>
             </div>
             {datasets.map((dataset, datasetIndex) => (
                 <div key={datasetIndex}>
-                    <div className="flex">
+                    <div className="flex items-center">
                         <h2 className="text-lg font-base text-black my-4">
-                            {dataset.name === "main_condition" ? (
-                                <>
-                                    業種の絞り込み<span className="text-red-500 text-sm ml-2">※</span>
-                                </>
-                            ) : dataset.name === "sub_condition" ? (
-                                "その他条件の絞り込み"
-                            ) : (
-                                <>
-                                    エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span>
-                                </>
-                            )}
+                            {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>業種<span className="text-red-500 text-sm ml-2">※</span></>)}
                         </h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
@@ -436,21 +385,6 @@ const ChangeRequest: React.FC = () => {
                 </div>
             ))}
             <div>
-                <div className="my-4">
-                    <label htmlFor="area_memo" className="block mb-2 text-base font-medium text-black">その他備考</label>
-                    <textarea id="area_memo" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
-                        onChange={(e) => {
-                            setCurrentRequest((prev) => prev ? ({
-                                ...prev,
-                                areaMemo: e.target.value,
-                            }) : prev);
-                        }}
-                        value={currentRequest?.areaMemo || ''}
-                        placeholder="その他でご依頼内容があれば入力ください。"
-                        required />
-                </div>
-            </div>
-            <div>
                 <button
                     onClick={() => { history.back() }}
                     className="mt-4 mx-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
@@ -459,7 +393,7 @@ const ChangeRequest: React.FC = () => {
                 </button>
                 <button
                     onClick={() => {
-                        if(confirmValues()){
+                        if (confirmValues()) {
                             setIsAddModalOpen(true);
                         }
                     }}
@@ -473,20 +407,10 @@ const ChangeRequest: React.FC = () => {
                     <div>
                         <div className="relative z-20 bg-white border-gray-300">
                             <div className="my-4">
-                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">プロジェクト名</label>
+                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">プロジェクト名<span className="text-red-500 text-sm ml-2">※</span></label>
                                 <input type="text" id="project_name_confirm"
                                     className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
-                                    onChange={(e) => { setProjectName(e.target.value) }}
                                     value={currentRequest?.projectName}
-                                    required
-                                    readOnly
-                                />
-                            </div>
-                            <div className="my-4">
-                                <label htmlFor="project_name_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">希望件数</label>
-                                <input type="number" id="project_name_confirm"
-                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
-                                    value={currentRequest?.wishNum}
                                     required
                                     readOnly
                                 />
@@ -494,18 +418,7 @@ const ChangeRequest: React.FC = () => {
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
                                     <h2 className="text-lg font-base text-black my-4">
-                                        {dataset.name === "main_condition" ? (
-                                            <>
-                                                業種の絞り込み<span className="text-red-500 text-sm ml-2">※</span>
-                                            </>
-                                        ) : dataset.name === "sub_condition" ? (
-                                            "その他条件の絞り込み"
-                                        ) : (
-                                            <>
-                                                エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span>
-                                            </>
-                                        )}
-                                    </h2>
+                                        {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
@@ -525,16 +438,6 @@ const ChangeRequest: React.FC = () => {
                                     />
                                 </div>
                             ))}
-                            <div className="my-4">
-                                <label htmlFor="area_memo_confirm" className="block mb-2 text-base font-medium text-gray-900 text-black">その他備考</label>
-                                <textarea id="area_memo_confirm"
-                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500 min-h-24"
-                                    onChange={(e) => { setAreaMemo(e.target.value) }}
-                                    value={currentRequest?.areaMemo}
-                                    required
-                                    readOnly
-                                />
-                            </div>
                         </div>
                     </div>
                     <div className="flex justify-center">
@@ -573,4 +476,4 @@ const ChangeRequest: React.FC = () => {
     );
 };
 
-export default ChangeRequest;
+export default ChangeRequestRed;

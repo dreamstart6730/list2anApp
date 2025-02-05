@@ -193,9 +193,28 @@ const ChangeRequestYellow: React.FC = () => {
         return selectedValues;
     };
 
+    // const confirmValues = () => {
+    //     const selectedValues = getSelectedValues();
+    //     setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
+    // };
+
     const confirmValues = () => {
+
         const selectedValues = getSelectedValues();
+        const requestData = {
+            projectName: currentRequest?.projectName,
+            wishNum: currentRequest?.wishNum,
+            areaSelection: selectedValues.area_condition || {},
+            portalSite: currentRequest?.portalSite,
+            areaMemo: currentRequest?.areaMemo,
+        };
+        console.log(requestData);
+        if(requestData.projectName === "" || (requestData.wishNum ?? 0) < 1 || requestData.portalSite === "" || Object.keys(requestData.areaSelection).length === 0){
+            alert("必須項目を入力してください。");
+            return 0;
+        }
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
+        return 1;
     };
 
     const handleSubmit = async ({ completeState }: { completeState: number }) => {
@@ -418,8 +437,9 @@ const ChangeRequestYellow: React.FC = () => {
                 </button>
                 <button
                     onClick={() => {
-                        setIsAddModalOpen(true)
-                        confirmValues()
+                        if(confirmValues()){
+                            setIsAddModalOpen(true);
+                        }
                     }}
                     className="mt-4 mx-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
