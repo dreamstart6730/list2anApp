@@ -258,18 +258,20 @@ const ChangeRequestRed: React.FC = () => {
             return;
         }
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request_red`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData),
-            });
+            const response = await axios.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/update_request_red/${currentRequest?.id}`,
+                requestData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include token for authentication
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Request saved successfully:', data);
-                router.push("/list_request")
+            if (response.status === 200) {
+                console.log('Request saved successfully:', response.data);
+                router.push("/list_request");
             } else {
                 console.error('Failed to save request:', response.statusText);
                 alert('保存に失敗しました');

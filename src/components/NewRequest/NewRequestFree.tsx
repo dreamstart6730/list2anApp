@@ -7,7 +7,6 @@ import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import TagInput from "../common/Loader/TagInput";
-import { secureHeapUsed } from "crypto";
 
 
 interface RequestGroup {
@@ -22,7 +21,7 @@ interface DecodedToken {
     role: number;
 }
 
-const NewRequestRed: React.FC = () => {
+const NewRequestFree: React.FC = () => {
     const datasets = [
         { name: "work_condition", data: requestGroupCheckData5 },
         { name: "area_condition", data: requestGroupCheckData3 }
@@ -95,17 +94,6 @@ const NewRequestRed: React.FC = () => {
             alert("必須項目を入力してください。");
             return 0;
         }
-        const areaCount = Object.values(requestData.areaSelection).reduce((sum, selection) => sum + selection.length, 0);
-        const workConditionCount = Object.values(requestData.workCondition).reduce((sum, condition) => sum + condition.length, 0);
-        
-        console.log("Area Count:", areaCount, "Work Condition Count:", workConditionCount);
-        
-        if (areaCount > 1 || workConditionCount > 1) {
-            alert("選択できる項目は1つだけです。");
-            return;
-        }
-        console.log(requestData.areaSelection)
-        console.log(requestData.workCondition)
         setWorkCondition(JSON.stringify(selectedValues.work_condition, null, 2))
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
         return 1;
@@ -335,19 +323,19 @@ const NewRequestRed: React.FC = () => {
                         >
                             戻る
                         </button>
-                        {/* <button
+                        <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit({completeState: 5});
+                                handleSubmit({completeState: 0});
                             }}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mx-4"
                         >
                             下書き保存
-                        </button> */}
+                        </button>
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit({completeState: 11});
+                                handleSubmit({completeState: 1});
                             }}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-4"
                         >
@@ -360,4 +348,4 @@ const NewRequestRed: React.FC = () => {
     );
 };
 
-export default NewRequestRed;
+export default NewRequestFree;

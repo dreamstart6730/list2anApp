@@ -6,6 +6,7 @@ import DetailModal from "@/components/common/Loader/DetailModal";
 import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3, requestGroupCheckData4, requestGroupCheckData5 } from "@/constant/RequestGroup";
 import RequestCategoryModal from "./RequestCategoryModal";
 import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
+import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 
@@ -303,39 +304,88 @@ const ListRequestTable = () => {
     }
 
     const handleDownloadList = async () => {
-        if (!selectedList || !selectedList.filePath) {
-            alert("ダウンロード可能なファイルが見つかりません。");
-            return;
+        if (selectedList?.category == "レッド") {
+            const token = localStorage.getItem("listan_token");
+            if (!token) {
+                console.log("No token found. Redirecting to login...");
+                return;
+            }
+
+            const decodedToken = jwtDecode<DecodedToken>(token);
+            const userId = decodedToken?.id;
+            try {
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/red_file_download`, {
+                    params: {
+                        list_id: selectedList.id,
+                        userId: userId
+                    },
+                });
+                const data = response.data;
+
+                if (Array.isArray(data)) {
+                    const csvContent = convertToCSV(data);
+                    downloadCSV(csvContent, `${selectedList.projectName || 'MyProject'}_red_list.csv`);
+                } else {
+                    console.error("Unexpected response format:", data);
+                    alert("ファイルのダウンロードに失敗しました。");
+                }
+
+            } catch (error) {
+                console.error("Error downloading the file:", error);
+                alert("ファイルのダウンロード中にエラーが発生しました。");
+            }
+        } else {
+            if (!selectedList || !selectedList.filePath) {
+                alert("ダウンロード可能なファイルが見つかりません。");
+                return;
+            }
+            try {
+                // Fetch the file as a blob from the server
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/${selectedList.filePath}`, {
+                    responseType: 'blob',
+                });
+
+                // Create a Blob URL for the file
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+
+                // Create a temporary link element for downloading
+                const link = document.createElement('a');
+                link.href = url;
+                const now = new Date();
+                const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+                const fileName = `${selectedList.projectName || 'MyProject'}_${formattedDate}.csv`;
+                link.setAttribute('download', fileName); // Rename the file using `fileName`
+
+                // Trigger the download
+                document.body.appendChild(link);
+                link.click();
+
+                // Clean up the temporary link
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url); // Release the Blob URL
+            } catch (error) {
+                console.error("Error downloading the file:", error);
+                alert("ファイルのダウンロード中にエラーが発生しました。");
+            }
         }
+    };
 
-        try {
-            // Fetch the file as a blob from the server
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/${selectedList.filePath}`, {
-                responseType: 'blob',
-            });
+    const convertToCSV = (data: any[]) => {
+        const headers = Object.keys(data[0]).join(",");
+        const rows = data.map(row => Object.values(row).join(",")).join("\n");
+        return `${headers}\n${rows}`;
+    };
 
-            // Create a Blob URL for the file
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-
-            // Create a temporary link element for downloading
-            const link = document.createElement('a');
-            link.href = url;
-            const now = new Date();
-            const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
-            const fileName = `${selectedList.projectName || 'MyProject'}_${formattedDate}.csv`;
-            link.setAttribute('download', fileName); // Rename the file using `fileName`
-
-            // Trigger the download
-            document.body.appendChild(link);
-            link.click();
-
-            // Clean up the temporary link
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url); // Release the Blob URL
-        } catch (error) {
-            console.error("Error downloading the file:", error);
-            alert("ファイルのダウンロード中にエラーが発生しました。");
-        }
+    const downloadCSV = (csvContent: string, fileName: string) => {
+        const blob = new Blob([csvContent], { type: "text/csv;charset=Shift-JIS;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     if (loading) {
@@ -345,11 +395,18 @@ const ListRequestTable = () => {
     return (
         <>
             <div className="my-4">
+                <Link href="./new_request/free">
+                    <button
+                        className="m-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
+                        無料リスト
+                    </button>
+                </Link>
                 <button
                     className="m-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                     onClick={() => { setIsCategoryModalOpen(true) }}
                 >
-                    新規依頼
+                    有料リスト
                 </button>
             </div>
             <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={() => { setIsCategoryModalOpen(false) }} />
@@ -376,7 +433,7 @@ const ListRequestTable = () => {
                                     <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.category}</td>
-                                    <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}</td>
+                                    <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : ((requestList.completeState != 11)?"納品済み": "依頼完了")) : ("下書き")}</td>
                                     <td className="border-b px-4 py-5 text-black">
                                         {requestList.updatedAt
                                             ? new Intl.DateTimeFormat("ja-JP", {
@@ -411,7 +468,7 @@ const ListRequestTable = () => {
                     onDelete={handleDeleteSelectedList}
                     deleteFlag={(selectedList.completeState == 0)}
                     onDownloadList={() => handleDownloadList()}
-                    downloadFlag={(selectedList.completeState > 1)}
+                    downloadFlag={(selectedList.completeState > 1) && (selectedList.completeState != 11)}
                 >
                     <h2 className="text-lg font-bold mb-4 text-gray-700">リスト詳細</h2>
                     <div className="space-y-4">
@@ -616,7 +673,7 @@ const ListRequestTable = () => {
                             <label className="block text-gray-700 min-w-40">状況</label>
                             <input
                                 type="text"
-                                value={(selectedList.completeState > 0) ? ((selectedList.completeState < 2) ? "依頼完了" : "納品済み") : ("下書き")}
+                                value={(selectedList.completeState > 0) ? ((selectedList.completeState < 2) ? "依頼完了" : ((selectedList.completeState != 11)?"納品済み": "依頼完了")) : ("下書き")}
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />

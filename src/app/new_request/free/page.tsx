@@ -2,7 +2,8 @@ import { Metadata } from "next";
 import ClientDefaultLayout from "@/components/Layouts/ClientDefaultLayout";
 
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import NewRequestFree from "@/components/NewRequest/NewRequestFree";
+import NewRequestRed from "@/components/NewRequest/NewRequestRed";
+
 export const metadata: Metadata = {
     title:
         "ListAn Dashboard",
@@ -13,8 +14,8 @@ export default function Home() {
     return (
         <>
             <ClientDefaultLayout>
-                <Breadcrumb pageName="新規依頼" />
-                <NewRequestFree />
+                <Breadcrumb pageName="無料リスト" />
+                <NewRequestRed />
             </ClientDefaultLayout>
         </>
     );

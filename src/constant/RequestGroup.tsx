@@ -100,7 +100,7 @@ export const requestGroupCheckData5 = [
     {
         category: "ビジネス",
         options: [
-            "IT情報通信",
+            "IT・情報通信",
             "OA機器",
             "アウトソーシング",
             "イベント",
