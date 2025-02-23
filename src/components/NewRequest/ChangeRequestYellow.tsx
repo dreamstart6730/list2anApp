@@ -193,11 +193,6 @@ const ChangeRequestYellow: React.FC = () => {
         return selectedValues;
     };
 
-    // const confirmValues = () => {
-    //     const selectedValues = getSelectedValues();
-    //     setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
-    // };
-
     const confirmValues = () => {
 
         const selectedValues = getSelectedValues();

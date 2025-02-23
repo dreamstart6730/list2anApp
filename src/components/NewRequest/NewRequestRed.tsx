@@ -183,7 +183,7 @@ const NewRequestRed: React.FC = () => {
                 <div key={datasetIndex}>
                     <div className="flex items-center">
                         <h2 className="text-lg font-base text-black my-4">
-                            {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>業種<span className="text-red-500 text-sm ml-2">※</span></>)}
+                            {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "work_condition") ? "業種" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}
                         </h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
@@ -302,7 +302,7 @@ const NewRequestRed: React.FC = () => {
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
                                     <h2 className="text-lg font-base text-black my-4">
-                                    {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
+                                    {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "work_condition") ? "業種" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)

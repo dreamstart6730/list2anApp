@@ -9,7 +9,7 @@ import GroupCheckBox from "../NewRequest/GroupCheckBox/GroupCheckBox";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-
+import Encoding from 'encoding-japanese';
 interface RequestList {
     id: number;
     requestRandId: string;
@@ -377,7 +377,15 @@ const ListRequestTable = () => {
     };
 
     const downloadCSV = (csvContent: string, fileName: string) => {
-        const blob = new Blob([csvContent], { type: "text/csv;charset=Shift-JIS;" });
+        // Convert UTF-8 string to Shift-JIS bytes
+        const encoder = new TextEncoder();
+        const utf8Bytes = encoder.encode(csvContent);
+        const sjisBytes = Encoding.convert(utf8Bytes, {
+            to: 'SJIS',
+            from: 'UTF8'
+        });
+        
+        const blob = new Blob([new Uint8Array(sjisBytes)], { type: "text/csv;charset=Shift-JIS" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;

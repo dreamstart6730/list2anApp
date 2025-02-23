@@ -205,23 +205,18 @@ const ChangeRequestBlue: React.FC = () => {
         return selectedValues;
     };
 
-    // const confirmValues = () => {
-    //     const selectedValues = getSelectedValues();
-    //     setDetailCondition(JSON.stringify(selectedValues.detail_condition, null, 2))
-    //     setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
-    // };
-
     const confirmValues = () => {
 
         const selectedValues = getSelectedValues();
         const requestData = {
-            projectName,
-            wishNum,
+            projectName: currentRequest?.projectName,
+            wishNum: currentRequest?.wishNum,
             detailCondition: selectedValues.detail_condition || {}, // Ensure it's an object
             areaSelection: selectedValues.area_condition || {},
             tags: tags,
-            areaMemo,
+            areaMemo: currentRequest?.areaMemo,
         };
+        console.log(requestData);
         if(requestData.projectName === "" || tags.length < 1 || (requestData.wishNum ?? 0) < 1 || Object.keys(requestData.areaSelection).length === 0){
             alert("必須項目を入力してください。");
             return 0;
