@@ -14,6 +14,7 @@ interface User {
   requestCount: number;
   createdAt: Date;
   role: number;
+  planId: number;
 }
 
 const DropdownUser = () => {
@@ -27,6 +28,7 @@ const DropdownUser = () => {
     // Redirect to the login page
     router.push("/auth/signin");
   };
+  
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("listan_token");

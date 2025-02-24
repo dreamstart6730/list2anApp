@@ -21,6 +21,7 @@ interface User {
     id: number;
     name: string;
     email: string;
+    planId: number;
     contractId: string;
     requests: RequestList[];
 }
@@ -147,6 +148,7 @@ const ClientTable = () => {
                                 <th className="min-w-[40px] px-4 py-4 font-medium text-black">No</th>
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">契約ID</th>
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">クライアント名</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">プラン</th>
                                 <th className="min-w-[120px] px-4 py-4 font-medium text-black">合計リスト数</th>
                                 <th className="px-4 py-4 font-medium text-black">合計依頼数</th>
                                 <th className="px-4 py-4 font-medium text-black">更新日</th>
@@ -162,6 +164,9 @@ const ClientTable = () => {
                                         <td className="border-b border-[#eee] px-4 py-5">{index + 1}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">{client.contractId}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">{(client.user) ? client.user.name : ""}</td>
+                                        <td className="border-b border-[#eee] px-4 py-5">
+                                            {(client.user?.planId == 0) ? "プリー" : "レギュラー"}
+                                        </td>
                                         <td className="border-b border-[#eee] px-4 py-5">{countSum}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">{count_requset}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">
@@ -309,6 +314,15 @@ const ClientTable = () => {
                                         <input
                                             type="text"
                                             value={selectedClient.user?.contractId || ""}
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">プラン</label>
+                                        <input
+                                            type="text"
+                                            value={(selectedClient.user?.planId == 0) ? "プリー" : "レギュラー"}
                                             className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                             readOnly
                                         />

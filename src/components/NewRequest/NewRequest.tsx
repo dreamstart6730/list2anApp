@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { requestGroupCheckData, requestGroupCheckData2, requestGroupCheckData3 } from "@/constant/RequestGroup";
 import LargeModal from "../common/Loader/LargeModal";
 import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 interface RequestGroup {
     category: string;
@@ -19,7 +20,20 @@ interface DecodedToken {
     role: number;
 }
 
+interface User {
+    id: number;
+    contractId: string;
+    name: string;
+    email: string;
+    listCount: number;
+    requestCount: number;
+    createdAt: Date;
+    role: number;
+    planId: number;
+}
+
 const NewRequest: React.FC = () => {
+    const [user, setUser] = useState<User>();
     const datasets = [
         { name: "main_condition", data: requestGroupCheckData },
         { name: "sub_condition", data: requestGroupCheckData2 },
@@ -38,6 +52,25 @@ const NewRequest: React.FC = () => {
     const [currentConditon, setCurrentCondition] = useState("");
     const [wishNum, setWishNum] = useState(0);
     const router = useRouter();
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const token = localStorage.getItem("listan_token");
+            if (!token) {
+                console.log("Token not found.");
+                return;
+            }
+            try {
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/user`, {
+                    headers: { Authorization: `Bearer ${token}` }, // Add token to the header
+                });
+                setUser(response.data);
+            } catch (error) {
+                console.log("Error fetching clients:", error);
+            }
+        };
+        fetchUser();
+    }, []);
 
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
@@ -144,7 +177,10 @@ const NewRequest: React.FC = () => {
             alert("必須項目を入力してください。");
             return;
         }
-
+        if (user?.planId !== 1) {
+            alert("有料プランにアップグレードしてください。");
+            return;
+        }
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/add_request`, {
                 method: 'POST',

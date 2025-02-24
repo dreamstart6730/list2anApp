@@ -196,14 +196,14 @@ const RedListDeliveryTable = () => {
                                             }).format(new Date(redItem.updatedDate))
                                             : "N/A"}
                                     </td>
-                                    <td className="border-b px-4 py-5 text-white">
+                                    {/* <td className="border-b px-4 py-5 text-white">
                                         <button
                                             className="text-blue-500 hover:underline mx-2"
                                             onClick={() => openDetailModal(redItem)}
                                         >
                                             詳細
                                         </button>
-                                    </td>
+                                    </td> */}
                                 </tr>
                             ))}
                         </tbody>

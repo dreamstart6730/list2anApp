@@ -100,10 +100,10 @@ const NewRequestRed: React.FC = () => {
         
         console.log("Area Count:", areaCount, "Work Condition Count:", workConditionCount);
         
-        if (areaCount > 1 || workConditionCount > 1) {
-            alert("選択できる項目は1つだけです。");
-            return;
-        }
+        // if (areaCount > 1 || workConditionCount > 1) {
+        //     alert("選択できる項目は1つだけです。");
+        //     return;
+        // }
         console.log(requestData.areaSelection)
         console.log(requestData.workCondition)
         setWorkCondition(JSON.stringify(selectedValues.work_condition, null, 2))
