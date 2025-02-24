@@ -384,7 +384,7 @@ const ListRequestTable = () => {
             to: 'SJIS',
             from: 'UTF8'
         });
-        
+
         const blob = new Blob([new Uint8Array(sjisBytes)], { type: "text/csv;charset=Shift-JIS" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -440,8 +440,19 @@ const ListRequestTable = () => {
                                     <td className="border-b px-4 py-5 text-black">{requestList.requestRandId}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.projectName}</td>
                                     <td className="border-b px-4 py-5 text-black">{requestList.listCount}</td>
-                                    <td className="border-b px-4 py-5 text-black">{requestList.category}</td>
-                                    <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : ((requestList.completeState != 11)?"納品済み": "依頼完了")) : ("下書き")}</td>
+                                    <td className="border-b px-4 py-5 text-black">
+                                        <label className={`border rounded-md px-2 py-1 ${
+                                            requestList.category === 'グリーン' ? 'bg-green-100 text-green-800 border-green-500' :
+                                            requestList.category === 'ブルー' ? 'bg-blue-100 text-blue-800 border-blue-500' :
+                                            requestList.category === 'ピンク' ? 'bg-pink-100 text-pink-800 border-pink-500' :
+                                            requestList.category === 'イエロー' ? 'bg-yellow-100 text-yellow-800 border-yellow-500' :
+                                            requestList.category === 'レッド' ? 'bg-red-200 text-red-900 border-red-600' :
+                                            'border-gray-500 text-black'
+                                        }`}>
+                                            {requestList.category}
+                                        </label>
+                                    </td>
+                                    <td className="border-b px-4 py-5 text-black">{(requestList.completeState > 0) ? ((requestList.completeState < 2) ? "依頼完了" : ((requestList.completeState != 11) ? "納品済み" : "依頼完了")) : ("下書き")}</td>
                                     <td className="border-b px-4 py-5 text-black">
                                         {requestList.updatedAt
                                             ? new Intl.DateTimeFormat("ja-JP", {
@@ -513,114 +524,116 @@ const ListRequestTable = () => {
                                     readOnly={isReadOnly}
                                 />
                             </div>)}
-                        {(selectedList.category == 'グリーン') && (
-                            <div className="flex">
-                                <label htmlFor="main_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">業種の絞り込み</label>
+                        <div className="flex py-2">
+                            {(selectedList.category == 'グリーン') && (
+                                <div>
+                                    <label htmlFor="main_condition_confirm" className="min-w-40 block text-base font-medium mr-4 text-gray-700">業種の絞り込み</label>
+                                    <button
+                                        onClick={() => {
+                                            setIsCheckBoxModalOpen(true)
+                                            setCurrentCondition("main_condition")
+                                        }}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    >
+                                        データを表示
+                                    </button>
+                                    <GroupCheckBox
+                                        isOpen={isCheckBoxModalOpen}
+                                        onClose={() => setIsCheckBoxModalOpen(false)}
+                                        dataset={{ name: "main_condition", data: requestGroupCheckData }}
+                                        current_condition={currentCondition}
+                                        checkedCategories={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedCategories}
+                                        checkedItems={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedItems}
+                                    />
+                                </div>
+                            )}
+                            {(selectedList.category == 'ブルー') && (
+                                <div>
+                                    <label htmlFor="detail_condition_confirm" className="min-w-40 block text-base font-medium mr-4 text-gray-700">条件の絞り込み</label>
+                                    <button
+                                        onClick={() => {
+                                            setIsCheckBoxModalOpen(true)
+                                            setCurrentCondition("detail_condition")
+                                        }}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    >
+                                        データを表示
+                                    </button>
+                                    <GroupCheckBox
+                                        isOpen={isCheckBoxModalOpen}
+                                        onClose={() => setIsCheckBoxModalOpen(false)}
+                                        dataset={{ name: "detail_condition", data: requestGroupCheckData4 }}
+                                        current_condition={currentCondition}
+                                        checkedCategories={transformData(selectedList.detailCondition, requestGroupCheckData4, "detail_condition").checkedCategories}
+                                        checkedItems={transformData(selectedList.detailCondition, requestGroupCheckData4, "detail_condition").checkedItems}
+                                    />
+                                </div>
+                            )}
+                            {(selectedList.category == 'グリーン') && (
+                                <div>
+                                    <label htmlFor="sub_condition_confirm" className="min-w-40 block text-base font-medium mr-4 text-gray-700">その他条件の絞り込み</label>
+                                    <button
+                                        onClick={() => {
+                                            setIsCheckBoxModalOpen(true)
+                                            setCurrentCondition("sub_condition")
+                                        }}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    >
+                                        データを表示
+                                    </button>
+                                    <GroupCheckBox
+                                        isOpen={isCheckBoxModalOpen}
+                                        onClose={() => setIsCheckBoxModalOpen(false)}
+                                        dataset={{ name: "sub_condition", data: requestGroupCheckData2 }}
+                                        current_condition={currentCondition}
+                                        checkedCategories={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedCategories}
+                                        checkedItems={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedItems}
+                                    />
+                                </div>
+                            )}
+                            {(selectedList.category == 'レッド') && (
+                                <div>
+                                    <label htmlFor="sub_condition_confirm" className="min-w-40 block text-base font-medium mr-4 text-gray-700">業種</label>
+                                    <button
+                                        onClick={() => {
+                                            setIsCheckBoxModalOpen(true)
+                                            setCurrentCondition("work_condition")
+                                        }}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    >
+                                        データを表示
+                                    </button>
+                                    <GroupCheckBox
+                                        isOpen={isCheckBoxModalOpen}
+                                        onClose={() => setIsCheckBoxModalOpen(false)}
+                                        dataset={{ name: "work_condition", data: requestGroupCheckData5 }}
+                                        current_condition={currentCondition}
+                                        checkedCategories={transformData(selectedList.workSelection, requestGroupCheckData5, "work_condition").checkedCategories}
+                                        checkedItems={transformData(selectedList.workSelection, requestGroupCheckData5, "work_condition").checkedItems}
+                                    />
+                                </div>
+                            )}
+                            <div>
+                                <label className="min-w-40 block text-gray-700 min-w-40">エリアの絞り込み</label>
                                 <button
                                     onClick={() => {
                                         setIsCheckBoxModalOpen(true)
-                                        setCurrentCondition("main_condition")
+                                        setCurrentCondition("area_condition")
                                     }}
                                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                >
-                                    データを表示
-                                </button>
-                                <GroupCheckBox
-                                    isOpen={isCheckBoxModalOpen}
-                                    onClose={() => setIsCheckBoxModalOpen(false)}
-                                    dataset={{ name: "main_condition", data: requestGroupCheckData }}
-                                    current_condition={currentCondition}
-                                    checkedCategories={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedCategories}
-                                    checkedItems={transformData(selectedList.mainCondition, requestGroupCheckData, "main_condition").checkedItems}
-                                />
-                            </div>
-                        )}
-                        {(selectedList.category == 'ブルー') && (
-                            <div className="flex">
-                                <label htmlFor="detail_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">条件の絞り込み</label>
-                                <button
-                                    onClick={() => {
-                                        setIsCheckBoxModalOpen(true)
-                                        setCurrentCondition("detail_condition")
-                                    }}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                >
-                                    データを表示
-                                </button>
-                                <GroupCheckBox
-                                    isOpen={isCheckBoxModalOpen}
-                                    onClose={() => setIsCheckBoxModalOpen(false)}
-                                    dataset={{ name: "detail_condition", data: requestGroupCheckData4 }}
-                                    current_condition={currentCondition}
-                                    checkedCategories={transformData(selectedList.detailCondition, requestGroupCheckData4, "detail_condition").checkedCategories}
-                                    checkedItems={transformData(selectedList.detailCondition, requestGroupCheckData4, "detail_condition").checkedItems}
-                                />
-                            </div>
-                        )}
-                        {(selectedList.category == 'グリーン') && (
-                            <div className="flex">
-                                <label htmlFor="sub_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">その他条件の絞り込み</label>
-                                <button
-                                    onClick={() => {
-                                        setIsCheckBoxModalOpen(true)
-                                        setCurrentCondition("sub_condition")
-                                    }}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                >
-                                    データを表示
-                                </button>
-                                <GroupCheckBox
-                                    isOpen={isCheckBoxModalOpen}
-                                    onClose={() => setIsCheckBoxModalOpen(false)}
-                                    dataset={{ name: "sub_condition", data: requestGroupCheckData2 }}
-                                    current_condition={currentCondition}
-                                    checkedCategories={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedCategories}
-                                    checkedItems={transformData(selectedList.subCondition, requestGroupCheckData2, "sub_condition").checkedItems}
-                                />
-                            </div>
-                        )}
-                        {(selectedList.category == 'レッド') && (
-                            <div className="flex">
-                                <label htmlFor="sub_condition_confirm" className="min-w-40 block mb-2 text-base font-medium text-gray-700">業種</label>
-                                <button
-                                    onClick={() => {
-                                        setIsCheckBoxModalOpen(true)
-                                        setCurrentCondition("work_condition")
-                                    }}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                >
-                                    データを表示
-                                </button>
-                                <GroupCheckBox
-                                    isOpen={isCheckBoxModalOpen}
-                                    onClose={() => setIsCheckBoxModalOpen(false)}
-                                    dataset={{ name: "work_condition", data: requestGroupCheckData5 }}
-                                    current_condition={currentCondition}
-                                    checkedCategories={transformData(selectedList.workSelection, requestGroupCheckData5, "work_condition").checkedCategories}
-                                    checkedItems={transformData(selectedList.workSelection, requestGroupCheckData5, "work_condition").checkedItems}
-                                />
-                            </div>
-                        )}
-                        <div className="flex">
-                            <label className="min-w-40 block text-gray-700 min-w-40">エリアの絞り込み</label>
-                            <button
-                                onClick={() => {
-                                    setIsCheckBoxModalOpen(true)
-                                    setCurrentCondition("area_condition")
-                                }}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
 
-                            >
-                                データを表示
-                            </button>
-                            <GroupCheckBox
-                                isOpen={isCheckBoxModalOpen}
-                                onClose={() => setIsCheckBoxModalOpen(false)}
-                                dataset={{ name: "area_condition", data: requestGroupCheckData3 }}
-                                current_condition={currentCondition}
-                                checkedCategories={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedCategories}
-                                checkedItems={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedItems}
-                            />
+                                >
+                                    データを表示
+                                </button>
+                                <GroupCheckBox
+                                    isOpen={isCheckBoxModalOpen}
+                                    onClose={() => setIsCheckBoxModalOpen(false)}
+                                    dataset={{ name: "area_condition", data: requestGroupCheckData3 }}
+                                    current_condition={currentCondition}
+                                    checkedCategories={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedCategories}
+                                    checkedItems={transformData(selectedList.areaSelection, requestGroupCheckData3, "area_condition").checkedItems}
+                                />
+                            </div>
                         </div>
                         {(selectedList.category == 'ブルー') && (
                             <div className="flex">
@@ -681,19 +694,23 @@ const ListRequestTable = () => {
                             <label className="block text-gray-700 min-w-40">状況</label>
                             <input
                                 type="text"
-                                value={(selectedList.completeState > 0) ? ((selectedList.completeState < 2) ? "依頼完了" : ((selectedList.completeState != 11)?"納品済み": "依頼完了")) : ("下書き")}
+                                value={(selectedList.completeState > 0) ? ((selectedList.completeState < 2) ? "依頼完了" : ((selectedList.completeState != 11) ? "納品済み" : "依頼完了")) : ("下書き")}
                                 className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                 readOnly
                             />
                         </div>
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">リスト区分</label>
-                            <input
-                                type="text"
-                                value={selectedList.category}
-                                className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
-                                readOnly
-                            />
+                            <label className={`border rounded-md px-2 py-1 ${
+                                            selectedList.category === 'グリーン' ? 'bg-green-100 text-green-800 border-green-500' :
+                                            selectedList.category === 'ブルー' ? 'bg-blue-100 text-blue-800 border-blue-500' :
+                                            selectedList.category === 'ピンク' ? 'bg-pink-100 text-pink-800 border-pink-500' :
+                                            selectedList.category === 'イエロー' ? 'bg-yellow-100 text-yellow-800 border-yellow-500' :
+                                            selectedList.category === 'レッド' ? 'bg-red-200 text-red-900 border-red-600' :
+                                            'border-gray-500 text-black'
+                                        }`}>
+                                {selectedList.category}
+                            </label>
                         </div>
                         <div className="flex">
                             <label className="block text-gray-700 min-w-40">依頼日</label>

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { requestGroupCheckData4, requestGroupCheckData3 } from "@/constant/RequestGroup";
 import LargeModal from "../common/Loader/LargeModal";
 import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import TagInput from "../common/Loader/TagInput";
-
+import axios from "axios";
 
 interface RequestGroup {
     category: string;
@@ -21,6 +21,18 @@ interface DecodedToken {
     role: number;
 }
 
+interface User {
+    id: number;
+    contractId: string;
+    name: string;
+    email: string;
+    listCount: number;
+    requestCount: number;
+    createdAt: Date;
+    role: number;
+    planId: number;
+}
+
 const NewRequestBlue: React.FC = () => {
     const datasets = [
         { name: "detail_condition", data: requestGroupCheckData4 },
@@ -28,7 +40,7 @@ const NewRequestBlue: React.FC = () => {
     ];
 
     const [tags, setTags] = useState<string[]>([]);
-
+    const [user, setUser] = useState<User>()
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: { [key: string]: boolean } }>({});
     const [checkedCategories, setCheckedCategories] = useState<{ [key: string]: boolean }>({});
     const [areaSelection, setAreaSelection] = useState("");
@@ -41,6 +53,25 @@ const NewRequestBlue: React.FC = () => {
     const [currentConditon, setCurrentCondition] = useState("");
     const router = useRouter();
 
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const token = localStorage.getItem("listan_token");
+            if (!token) {
+                console.log("Token not found.");
+                return;
+            }
+            try {
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/user`, {
+                    headers: { Authorization: `Bearer ${token}` }, // Add token to the header
+                });
+                setUser(response.data);
+            } catch (error) {
+                console.log("Error fetching clients:", error);
+            }
+        };
+        fetchUser();
+    }, []);
 
     const handleCheckboxChange = (datasetName: string, category: string, option: string) => {
         setCheckedItems((prev) => ({
@@ -101,7 +132,7 @@ const NewRequestBlue: React.FC = () => {
             tags: tags,
             areaMemo,
         };
-        if(projectName === "" || tags.length<1 || wishNum < 1 || Object.keys(requestData.areaSelection).length === 0){
+        if (projectName === "" || tags.length < 1 || wishNum < 1 || Object.keys(requestData.areaSelection).length === 0) {
             alert("必須項目を入力してください。");
             return 0;
         }
@@ -141,8 +172,12 @@ const NewRequestBlue: React.FC = () => {
             areaMemo,
             completeState,
         };
-        if(projectName === "" || tags.length<1 || wishNum < 1 || Object.keys(requestData.areaSelection).length === 0) {
+        if (projectName === "" || tags.length < 1 || wishNum < 1 || Object.keys(requestData.areaSelection).length === 0) {
             alert("必須項目を入力してください。");
+            return;
+        }
+        if (user?.planId !== 1) {
+            alert("有料プランにアップグレードしてください。");
             return;
         }
         try {
@@ -304,7 +339,7 @@ const NewRequestBlue: React.FC = () => {
                 </button>
                 <button
                     onClick={() => {
-                        if(confirmValues()){
+                        if (confirmValues()) {
                             setIsAddModalOpen(true);
                         }
                     }}
@@ -339,17 +374,17 @@ const NewRequestBlue: React.FC = () => {
                             <div className="my-4">
                                 <div className="my-4">
                                     <label htmlFor="tags" className="block mb-2 text-base font-base text-black">タグ番号<span className="text-red-500 text-sm ml-2">※</span></label>
-                                    <input type="text" 
-                                    className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
-                                    value={tags}
-                                    readOnly
+                                    <input type="text"
+                                        className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-200 border-gray-600 placeholder-gray-400 text-black focus:ring-blue-500 focus:border-blue-500"
+                                        value={tags}
+                                        readOnly
                                     />
                                 </div>
                             </div>
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
                                     <h2 className="text-lg font-base text-black my-4">
-                                    {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
+                                        {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
@@ -395,7 +430,7 @@ const NewRequestBlue: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit({completeState: 0});
+                                handleSubmit({ completeState: 0 });
                             }}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mx-4"
                         >
@@ -404,7 +439,7 @@ const NewRequestBlue: React.FC = () => {
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit({completeState: 1});
+                                handleSubmit({ completeState: 1 });
                             }}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-4"
                         >

@@ -7,6 +7,7 @@ import GroupCheckBox from "./GroupCheckBox/GroupCheckBox";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import TagInput from "../common/Loader/TagInput";
+import { secureHeapUsed } from "crypto";
 
 
 interface RequestGroup {
@@ -94,6 +95,17 @@ const NewRequestFree: React.FC = () => {
             alert("必須項目を入力してください。");
             return 0;
         }
+        const areaCount = Object.values(requestData.areaSelection).reduce((sum, selection) => sum + selection.length, 0);
+        const workConditionCount = Object.values(requestData.workCondition).reduce((sum, condition) => sum + condition.length, 0);
+        
+        console.log("Area Count:", areaCount, "Work Condition Count:", workConditionCount);
+        
+        if (areaCount > 1 || workConditionCount > 1) {
+            alert("選択できる項目は1つだけです。");
+            return;
+        }
+        console.log(requestData.areaSelection)
+        console.log(requestData.workCondition)
         setWorkCondition(JSON.stringify(selectedValues.work_condition, null, 2))
         setAreaSelection(JSON.stringify(selectedValues.area_condition, null, 2))
         return 1;
@@ -171,7 +183,7 @@ const NewRequestFree: React.FC = () => {
                 <div key={datasetIndex}>
                     <div className="flex items-center">
                         <h2 className="text-lg font-base text-black my-4">
-                            {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>業種<span className="text-red-500 text-sm ml-2">※</span></>)}
+                            {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "work_condition") ? "業種" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}
                         </h2>
                         <button className="text-blue-500 ml-4"
                             onClick={() => {
@@ -290,7 +302,7 @@ const NewRequestFree: React.FC = () => {
                             {datasets.map((dataset, datasetIndex) => (
                                 <div key={datasetIndex}>
                                     <h2 className="text-lg font-base text-black my-4">
-                                    {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "sub_condition") ? "その他条件の絞り込み" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
+                                    {(dataset.name === "detail_condition") ? "条件の絞り込み" : (dataset.name === "work_condition") ? "業種" : (<>エリアの絞り込み<span className="text-red-500 text-sm ml-2">※</span></>)}</h2>
                                     <button
                                         onClick={() => {
                                             setIsCheckBoxModalOpen(true)
@@ -323,19 +335,19 @@ const NewRequestFree: React.FC = () => {
                         >
                             戻る
                         </button>
-                        <button
+                        {/* <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit({completeState: 0});
+                                handleSubmit({completeState: 5});
                             }}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mx-4"
                         >
                             下書き保存
-                        </button>
+                        </button> */}
                         <button
                             onClick={() => {
                                 setIsAddModalOpen(false);
-                                handleSubmit({completeState: 1});
+                                handleSubmit({completeState: 11});
                             }}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-4"
                         >
