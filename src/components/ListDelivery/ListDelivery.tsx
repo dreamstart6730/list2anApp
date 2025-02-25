@@ -256,7 +256,9 @@ const ListDeliveryTable = () => {
                 // Optionally refresh the request list after update
                 setRequestLists((prevRequests) =>
                     prevRequests.map((request) =>
-                        request.id === selectedList.id ? response.data : request
+                        (request.id === selectedList.id && request.category === selectedList.category) 
+                            ? { ...response.data, category: selectedList.category } 
+                            : request
                     )
                 );
 
@@ -337,9 +339,13 @@ const ListDeliveryTable = () => {
                 alert("リクエストが正常に更新されました。!");
 
                 // Optionally refresh the request list after update
+                console.log("response.data", response.data);
+                console.log("request", request);
                 setRequestLists((prevRequests) =>
                     prevRequests.map((request) =>
-                        (request.id === selectedList.id && request.category === selectedList.category) ? response.data : request
+                        (request.id === selectedList.id && request.category === selectedList.category) 
+                            ? { ...response.data, category: selectedList.category } 
+                            : request
                     )
                 );
 

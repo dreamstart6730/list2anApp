@@ -165,7 +165,7 @@ const ClientTable = () => {
                                         <td className="border-b border-[#eee] px-4 py-5">{client.contractId}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">{(client.user) ? client.user.name : ""}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">
-                                            {(client.user?.planId == 0) ? "プリー" : "レギュラー"}
+                                            {(client.user?.planId == 0) ? "フリー" : "レギュラー"}
                                         </td>
                                         <td className="border-b border-[#eee] px-4 py-5">{countSum}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">{count_requset}</td>
@@ -322,7 +322,7 @@ const ClientTable = () => {
                                         <label className="block text-gray-700">プラン</label>
                                         <input
                                             type="text"
-                                            value={(selectedClient.user?.planId == 0) ? "プリー" : "レギュラー"}
+                                            value={(selectedClient.user?.planId == 0) ? "フリー" : "レギュラー"}
                                             className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
                                             readOnly
                                         />

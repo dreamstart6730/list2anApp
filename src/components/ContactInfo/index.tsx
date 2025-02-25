@@ -130,7 +130,7 @@ const FormLayout = () => {
                                             <input 
                                                 type="text"
                                                 placeholder=""
-                                                value={(user?.planId === 0) ? "プリー" : "レギュラー"}
+                                                value={(user?.planId === 0) ? "フリー" : "レギュラー"}
                                                 className="w-full rounded border-[1.5px] border-stroke px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-300 focus:border-primary bg-gray-200"
                                                 readOnly
                                             />
