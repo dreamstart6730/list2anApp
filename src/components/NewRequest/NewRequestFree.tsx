@@ -101,7 +101,7 @@ const NewRequestFree: React.FC = () => {
         console.log("Area Count:", areaCount, "Work Condition Count:", workConditionCount);
         
         if (areaCount > 1 || workConditionCount > 1) {
-            alert("選択できる項目は1つだけです。");
+            alert("無料リストは複数選択できません。有料リストをご利用ください。");
             return;
         }
         console.log(requestData.areaSelection)
