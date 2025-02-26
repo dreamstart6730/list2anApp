@@ -12,9 +12,11 @@ interface DetailModalProps {
   deleteFlag: boolean;
   downloadFlag: boolean
   onDownloadList: () => void;
+  onEdit: () => void;
+  editFlag: boolean;
 }
 
-const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, onSave, onChangeFlag, onDelete, deleteFlag, onDownloadList, downloadFlag }) => {
+const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, onSave, onChangeFlag, onDelete, deleteFlag, onEdit, editFlag }) => {
   if (!isOpen) return null;
   const [changeFlag, setChangeFlag] = useState(false);
   const handleToggleChangeFlag = (flag: boolean) => {
@@ -22,7 +24,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, on
     onChangeFlag(flag); // Notify the parent
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-xl">
         <button
           onClick={onClose}
@@ -46,6 +48,14 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, on
           </div>
           <div
             className="ml-2">
+            {editFlag && (
+              <button
+                onClick={onEdit}
+                className="bg-lime-500 text-white px-4 py-2 rounded hover:bg-lime-600 mr-12"
+              >
+                納品集計
+              </button>
+            )}
             {deleteFlag && (
               !changeFlag ? (
                 <button
