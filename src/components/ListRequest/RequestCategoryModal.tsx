@@ -29,7 +29,7 @@ interface RequestCategoryModalProps {
 
 const RequestCategoryModal: React.FC<RequestCategoryModalProps> = ({ isOpen, onClose, user }) => {
     if (!isOpen) return null;
-    console.log(isOpen);
+    console.log(user);
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-xl">

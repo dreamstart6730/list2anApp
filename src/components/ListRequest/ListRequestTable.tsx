@@ -127,8 +127,8 @@ const ListRequestTable = () => {
                 const response = await axios.get(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/requestLists`,
                     {
-                        params: { userId }, // Pass userId as a query parameter
-                        headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
+                        params: { userId },
+                        headers: { Authorization: `Bearer ${token}` },
                     }
                 );
                 const requests = response.data.requests.map((request: RequestList) => ({ ...request, category: 'グリーン' }));
@@ -143,10 +143,9 @@ const ListRequestTable = () => {
                     ...requestsPink,
                     ...requestsYellow,
                     ...requestsRed,
-                ];
+                ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
                 setRequestLists(combinedRequests);
-                console.log("Fetched clients:", response.data.requests);
             } catch (error) {
                 console.log("Error fetching clients:", error);
             } finally {

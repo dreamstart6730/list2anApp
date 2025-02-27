@@ -5,11 +5,43 @@ interface MonthEditModalProps {
     monthTarget: Date;
     setMonthTarget: Dispatch<SetStateAction<Date>>;
     getMonthData: (date: Date) => Promise<void>;
+    monthData: MonthData;
 }
 
-const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, setMonthTarget, getMonthData }) => {
-    const handleDateChange = (dateStr: string) => {
-        setMonthTarget(new Date(dateStr));
+interface Request {
+    id: number;
+    requestRandId: string;
+    projectName: string;
+    completeState: number;
+    areaSelection: string;
+    listCount: number;
+}
+
+interface MonthData {
+    requestsRed: Request[];
+    requestsBlue: Request[];
+    requestsGreen: Request[];
+    requestsYellow: Request[];
+    requestsPink: Request[];
+}
+
+
+
+const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, setMonthTarget, getMonthData, monthData }) => {
+    console.log(monthData);
+    const years = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 5 + i);
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    
+    const handleYearChange = (year: number) => {
+        const newDate = new Date(monthTarget);
+        newDate.setFullYear(year);
+        setMonthTarget(newDate);
+    };
+
+    const handleMonthChange = (month: number) => {
+        const newDate = new Date(monthTarget);
+        newDate.setMonth(month - 1);
+        setMonthTarget(newDate);
     };
 
     return (
@@ -28,28 +60,32 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                 const newDate = new Date(monthTarget);
                                 newDate.setMonth(monthTarget.getMonth() - 1);
                                 setMonthTarget(newDate);
+                                getMonthData(newDate);
                             }}
                             className="text-gray-600 hover:text-gray-800 px-4"
                         >
-                            ←
+                            {'<<'}
                         </button>
                         <div className="flex items-center relative">
-                            <input 
-                                type="month" 
-                                className="absolute opacity-0 w-full h-full cursor-pointer"
-                                value={monthTarget.toISOString().slice(0, 7)}
-                                onChange={(e) => handleDateChange(e.target.value)}
-                                id="monthPicker"
-                                aria-label="Month picker"
-                            />
-                            <div 
-                                className="mx-4 bg-teal-600 text-white px-4 py-1 rounded cursor-pointer"
-                                onClick={() => {
-                                    console.log(document.getElementById('monthPicker'));
-                                    (document.getElementById('monthPicker') as HTMLInputElement)?.showPicker();
-                                }}
-                            >
-                                {`${monthTarget.getFullYear()}年${monthTarget.getMonth() + 1}月`}
+                            <div className="flex items-center space-x-2">
+                                <select 
+                                    value={monthTarget.getFullYear()}
+                                    onChange={(e) => handleYearChange(Number(e.target.value))}
+                                    className="bg-teal-600 text-white px-2 py-1 rounded"
+                                >
+                                    {years.map(year => (
+                                        <option key={year} value={year}>{year}年</option>
+                                    ))}
+                                </select>
+                                <select 
+                                    value={monthTarget.getMonth() + 1}
+                                    onChange={(e) => handleMonthChange(Number(e.target.value))}
+                                    className="bg-teal-600 text-white px-2 py-1 rounded"
+                                >
+                                    {months.map(month => (
+                                        <option key={month} value={month}>{month}月</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                         <button 
@@ -57,10 +93,11 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                 const newDate = new Date(monthTarget);
                                 newDate.setMonth(monthTarget.getMonth() + 1);
                                 setMonthTarget(newDate);
+                                getMonthData(newDate);
                             }}
                             className="text-gray-600 hover:text-gray-800 px-4"
                         >
-                            →
+                            {'>>'}
                         </button>
                     </div>
                     <table className="w-full table-auto">
@@ -81,6 +118,7 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
                                     {/* {selectedClient?.user?.requestsRed?.length || 0} */}
+                                    {monthData.requestsRed.length}
                                 </td>
                             </tr>
                             <tr>
@@ -89,9 +127,10 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
                                     {/* {selectedClient?.user?.requestsBlue?.reduce((sum, item) => sum + item.listCount, 0) || 0} */}
+                                    {monthData.requestsBlue.reduce((sum, item) => sum + item.listCount, 0)}
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {selectedClient?.user?.requestsBlue?.length || 0} */}
+                                    {monthData.requestsBlue.length}
                                 </td>
                             </tr>
                             <tr>
@@ -99,10 +138,10 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                     <div className="bg-green-500 text-white px-4 py-2 rounded">グリーン</div>
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {selectedClient?.user?.requestsGreen?.reduce((sum, item) => sum + item.listCount, 0) || 0} */}
+                                    {monthData.requestsGreen.reduce((sum, item) => sum + item.listCount, 0)}
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {selectedClient?.user?.requestsGreen?.length || 0} */}
+                                    {monthData.requestsGreen.length}
                                 </td>
                             </tr>
                             <tr>
@@ -110,10 +149,10 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                     <div className="bg-yellow-400 text-white px-4 py-2 rounded">イエロー</div>
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {selectedClient?.user?.requestsYellow?.reduce((sum, item) => sum + item.listCount, 0) || 0} */}
+                                    {monthData.requestsYellow.reduce((sum, item) => sum + item.listCount, 0)}
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {selectedClient?.user?.requestsYellow?.length || 0} */}
+                                    {monthData.requestsYellow.length}
                                 </td>
                             </tr>
                             <tr>
@@ -121,10 +160,10 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                     <div className="bg-pink-500 text-white px-4 py-2 rounded">ピンク</div>
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {selectedClient?.user?.requestsPink?.reduce((sum, item) => sum + item.listCount, 0) || 0} */}
+                                    {monthData.requestsPink.reduce((sum, item) => sum + item.listCount, 0)}
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {selectedClient?.user?.requestsPink?.length || 0} */}
+                                    {monthData.requestsPink.length}
                                 </td>
                             </tr>
                             <tr>
@@ -132,12 +171,11 @@ const MonthEditModal: React.FC<MonthEditModalProps> = ({ onClose, monthTarget, s
                                     <div className="px-4 py-2 rounded">合計
                                     </div>
                                 </td>
-                                <td></td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {countSum} */}
+                                    {monthData.requestsRed.reduce((sum, item) => sum + item.listCount, 0) + monthData.requestsBlue.reduce((sum, item) => sum + item.listCount, 0) + monthData.requestsGreen.reduce((sum, item) => sum + item.listCount, 0) + monthData.requestsYellow.reduce((sum, item) => sum + item.listCount, 0) + monthData.requestsPink.reduce((sum, item) => sum + item.listCount, 0)}
                                 </td>
                                 <td className="border-b border-[#eee] px-4 py-2 text-center">
-                                    {/* {count_request} */}
+                                    {monthData.requestsRed.length + monthData.requestsBlue.length + monthData.requestsGreen.length + monthData.requestsYellow.length + monthData.requestsPink.length}
                                 </td>
                             </tr>
                         </tbody>

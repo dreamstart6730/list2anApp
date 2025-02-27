@@ -207,6 +207,8 @@ const NewRequestBlue: React.FC = () => {
         if (user?.planId !== 1) {
             alert("有料プランにアップグレードしてください。");
             return;
+        } else {
+            setIsAddModalOpen(true);
         }
     }
     return (
@@ -347,7 +349,6 @@ const NewRequestBlue: React.FC = () => {
                     onClick={() => {
                         if (confirmValues()) {
                             checkPlan();
-                            setIsAddModalOpen(true);
                         }
                     }}
                     className="mt-4 mx-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

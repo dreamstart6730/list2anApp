@@ -80,15 +80,16 @@ const ClientTable = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [clientCost, setClientCost] = useState<ClientCost | null>({
         userId: 0,
-        red_price: 0,
-        blue_price: 0,
-        green_price: 0,
-        yellow_price: 0,
-        pink_price: 0
+        red_price: -1,
+        blue_price: -1,
+        green_price: -1,
+        yellow_price: -1,
+        pink_price: -1
     });
     const [isCostReadOnly, setIsCostReadOnly] = useState(true);
     const [monthTarget, setMonthTarget] = useState<Date>(new Date());
     const [isMonthEditModalOpen, setIsMonthEditModalOpen] = useState(false);
+    const [monthData, setMonthData] = useState<any>(null);
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -152,11 +153,11 @@ const ClientTable = () => {
         setSelectedClient(client);
         setClientCost(client?.user?.clientCost ? client.user.clientCost : {
             userId: client.user?.id,
-            red_price: 0,
-            blue_price: 0,
-            green_price: 0,
-            yellow_price: 0,
-            pink_price: 0
+            red_price: -1,
+            blue_price: -1,
+            green_price: -1,
+            yellow_price: -1,
+            pink_price: -1
         });
         setIsDetailModalOpen(true);
     };
@@ -211,9 +212,14 @@ const ClientTable = () => {
             userId: selectedClient?.user?.id,
         });
 
-        const getedRequest = response.data.request;
+        const getedRequest = response.data;
+        setMonthData(getedRequest);
+        console.log(monthData);
     }
-    const handleEditMonth = () => {
+    const handleEditMonth = async () => {
+        console.log(monthTarget);
+        await getMonthData(monthTarget);
+        console.log(monthData);
         setIsMonthEditModalOpen(true);
     }
 
@@ -405,21 +411,6 @@ const ClientTable = () => {
                                 
                         return (
                                     <>
-                                        {/* <div className="flex items-center mb-4">
-                                            <div className="text-gray-600 cursor-pointer"
-                                                // onClick={() => getMonthData(new Date(monthTarget.setMonth(monthTarget.getMonth() - 1)))}
-                                                >{'<<'}</div>
-                                            <div className="mx-4 bg-teal-600 text-white px-4 py-1 rounded">
-                                                {monthTarget.toLocaleString('ja-JP', { year: 'numeric', month: 'long' })}
-                                            </div>
-                                            <div className="text-gray-600 cursor-pointer"
-                                                // onClick={() => getMonthData(new Date(monthTarget.setMonth(monthTarget.getMonth() + 1)))}
-                                                >
-                                                    {'>>'}
-                                            </div>
-                                        </div> */}
-
-                                        {/* Content */}
                                         <div className="max-w-full overflow-x-auto">
                                             <table className="w-full table-auto">
                                                 <thead>
@@ -800,6 +791,7 @@ const ClientTable = () => {
                     monthTarget={monthTarget}
                     setMonthTarget={setMonthTarget}
                     getMonthData={getMonthData}
+                    monthData={monthData}
                 />
             )}
         </div>
