@@ -6,6 +6,7 @@ import Modal from "@/components/common/Loader/Modal";
 import DetailModal from "@/components/common/Loader/DetailModal2";
 import CategoryModal from '@/components/common/Loader/CategoryModal';
 import { jwtDecode } from "jwt-decode";
+import MonthEditModal from "@/components/common/Loader/MonthEditModal";
 
 interface Client {
     id: number;
@@ -87,6 +88,7 @@ const ClientTable = () => {
     });
     const [isCostReadOnly, setIsCostReadOnly] = useState(true);
     const [monthTarget, setMonthTarget] = useState<Date>(new Date());
+    const [isMonthEditModalOpen, setIsMonthEditModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -210,6 +212,9 @@ const ClientTable = () => {
         });
 
         const getedRequest = response.data.request;
+    }
+    const handleEditMonth = () => {
+        setIsMonthEditModalOpen(true);
     }
 
     if (loading) {
@@ -400,15 +405,19 @@ const ClientTable = () => {
                                 
                         return (
                                     <>
-                                        <div className="flex items-center mb-4">
+                                        {/* <div className="flex items-center mb-4">
                                             <div className="text-gray-600 cursor-pointer"
-                                                onClick={() => getMonthData(new Date(monthTarget.setMonth(monthTarget.getMonth() - 1)))}>{'<<'}</div>
+                                                // onClick={() => getMonthData(new Date(monthTarget.setMonth(monthTarget.getMonth() - 1)))}
+                                                >{'<<'}</div>
                                             <div className="mx-4 bg-teal-600 text-white px-4 py-1 rounded">
                                                 {monthTarget.toLocaleString('ja-JP', { year: 'numeric', month: 'long' })}
                                             </div>
                                             <div className="text-gray-600 cursor-pointer"
-                                                onClick={() => getMonthData(new Date(monthTarget.setMonth(monthTarget.getMonth() + 1)))}>{'>>'}</div>
-                                        </div>
+                                                // onClick={() => getMonthData(new Date(monthTarget.setMonth(monthTarget.getMonth() + 1)))}
+                                                >
+                                                    {'>>'}
+                                            </div>
+                                        </div> */}
 
                                         {/* Content */}
                                         <div className="max-w-full overflow-x-auto">
@@ -429,13 +438,25 @@ const ClientTable = () => {
                                                         <td className="border-b border-[#eee] px-4 py-2 text-center">
                                                             <input type="text" 
                                                             className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
-                                                            value={clientCost?.red_price ? clientCost.red_price : "お問い合わせ"}
+                                                            value={(clientCost?.red_price === undefined || clientCost?.red_price < 0) ? "お問い合わせ" : clientCost.red_price} 
                                                             disabled = {isCostReadOnly}
                                                             onChange={(e) => {
-                                                                setClientCost(clientCost ? {
-                                                                    ...clientCost,
-                                                                    red_price: Number(e.target.value)
-                                                                } : null);
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        red_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        red_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        red_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
                                                             }}
                                                             onFocus={(e) => {
                                                                 e.target.select();
@@ -456,15 +477,25 @@ const ClientTable = () => {
                                                         <td className="border-b border-[#eee] px-4 py-2 text-center">
                                                             <input type="text" 
                                                             className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
-                                                            value={clientCost?.blue_price ? clientCost.blue_price : "お問い合わせ"} 
+                                                            value={(clientCost?.blue_price === undefined || clientCost?.blue_price < 0) ? "お問い合わせ" : clientCost.blue_price} 
                                                             disabled = {isCostReadOnly}
                                                             onChange={(e) => {
-                                                                console.log(clientCost);
-                                                                console.log(e.target.value);
-                                                                setClientCost(clientCost ? {
-                                                                    ...clientCost,
-                                                                    blue_price: Number(e.target.value)
-                                                                } : null);
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        blue_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        blue_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        blue_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
                                                             }}
                                                             onFocus={(e) => {
                                                                 e.target.select();
@@ -485,13 +516,25 @@ const ClientTable = () => {
                                                         <td className="border-b border-[#eee] px-4 py-2 text-center">
                                                             <input type="text" 
                                                             className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
-                                                            value={clientCost?.green_price ? clientCost.green_price : "お問い合わせ"}
+                                                            value={(clientCost?.green_price === undefined || clientCost?.green_price < 0) ? "お問い合わせ" : clientCost.green_price} 
                                                             disabled = {isCostReadOnly}
-                                                            onChange={(e) => {
-                                                                setClientCost(clientCost ? {
-                                                                    ...clientCost,
-                                                                    green_price: Number(e.target.value)
-                                                                } : null);
+                                                                onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        green_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        green_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        green_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
                                                             }}
                                                             onFocus={(e) => {
                                                                 e.target.select();
@@ -512,13 +555,25 @@ const ClientTable = () => {
                                                         <td className="border-b border-[#eee] px-4 py-2 text-center">
                                                             <input type="text" 
                                                             className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
-                                                            value={clientCost?.yellow_price ? clientCost.yellow_price : "お問い合わせ"}
+                                                            value={(clientCost?.yellow_price === undefined || clientCost?.yellow_price < 0) ? "お問い合わせ" : clientCost.yellow_price} 
                                                             disabled = {isCostReadOnly}
-                                                            onChange={(e) => {
-                                                                setClientCost(clientCost ? {
-                                                                    ...clientCost,
-                                                                    yellow_price: Number(e.target.value)
-                                                                } : null);
+                                                                onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        yellow_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        yellow_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        yellow_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
                                                             }}
                                                             onFocus={(e) => {
                                                                 e.target.select();
@@ -539,13 +594,25 @@ const ClientTable = () => {
                                                         <td className="border-b border-[#eee] px-4 py-2 text-center">
                                                             <input type="text" 
                                                             className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
-                                                            value={clientCost?.pink_price ? clientCost.pink_price : "お問い合わせ"}
+                                                            value={(clientCost?.pink_price === undefined || clientCost?.pink_price < 0) ? "お問い合わせ" : clientCost.pink_price} 
                                                             disabled = {isCostReadOnly}
-                                                            onChange={(e) => {
-                                                                setClientCost(clientCost ? {
-                                                                    ...clientCost,
-                                                                    pink_price: Number(e.target.value)
-                                                                } : null);
+                                                                onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        pink_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        pink_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        pink_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
                                                             }}
                                                             onFocus={(e) => {
                                                                 e.target.select();
@@ -584,7 +651,7 @@ const ClientTable = () => {
             {selectedClient && (
                 <DetailModal
                     isOpen={isDetailModalOpen}
-                    onClose={() => setIsDetailModalOpen(false)}
+                    onClose={() => {setIsDetailModalOpen(false); handleChangeFlag(false)}}
                     onSave={handleSaveSelectedClient}
                     onChangeFlag={handleChangeFlag}
                     onDelete={() => {}}
@@ -593,6 +660,7 @@ const ClientTable = () => {
                     downloadFlag= {false}
                     onEdit={handleDeleveryEdit}
                     editFlag= {selectedClient.user?.planId !== 0}
+                    onEditMonth={handleEditMonth}
                 >
 
                     {(() => {
@@ -620,12 +688,26 @@ const ClientTable = () => {
                                     </div>
                                     <div>
                                         <label className="block text-gray-700">契約プラン</label>
-                                        <input
-                                            type="text"
-                                            value={(selectedClient.user?.planId == 0) ? "フリー" : "レギュラー"}
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
-                                            readOnly
-                                        />
+                                        <select 
+                                            value={selectedClient.user?.planId}
+                                            className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : ""}`}
+                                            onChange={(e) => {
+                                                setSelectedClient((prev) => {
+                                                    if (!prev) return null;
+                                                    return {
+                                                        ...prev,
+                                                        user: {
+                                                            ...prev.user,
+                                                            planId: Number(e.target.value),
+                                                        }
+                                                    };
+                                                });
+                                            }}  
+                                            disabled={isReadOnly}
+                                        >
+                                            <option value={0}>フリー</option>
+                                            <option value={1}>レギュラー</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label className="block text-gray-700">契約アドレス</label>
@@ -712,7 +794,14 @@ const ClientTable = () => {
                     })()}
                 </DetailModal>
             )}
-
+            {isMonthEditModalOpen && (
+                <MonthEditModal
+                    onClose={() => setIsMonthEditModalOpen(false)}
+                    monthTarget={monthTarget}
+                    setMonthTarget={setMonthTarget}
+                    getMonthData={getMonthData}
+                />
+            )}
         </div>
     );
 };

@@ -46,6 +46,17 @@ interface User {
     name: string;
     email: string;
     contractId: string;
+    planId: number;
+    clientCost: ClientCost;
+}
+
+interface ClientCost {
+    userId: number;
+    red_price: number;
+    blue_price: number;
+    green_price: number;
+    yellow_price: number;
+    pink_price: number;   
 }
 
 interface DecodedToken {
@@ -68,6 +79,7 @@ const ListRequestTable = () => {
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentCondition, setCurrentCondition] = useState("");
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
 
 
     const transformData = (
@@ -144,6 +156,18 @@ const ListRequestTable = () => {
 
         fetchRequests();
     }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem("listan_token");
+        const fetchClientCost = async () => {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/client_cost`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setUser(response.data);
+        };
+        fetchClientCost();
+    }, []);
+
     const router = useRouter();
     const handleChangeFlag = (flag: boolean) => {
         if (selectedList?.id) {
@@ -417,7 +441,7 @@ const ListRequestTable = () => {
                     有料リスト
                 </button>
             </div>
-            <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={() => { setIsCategoryModalOpen(false) }} />
+            <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={() => { setIsCategoryModalOpen(false) }} user={user}/>
             <div className="rounded-sm border border-gray-500 mx-4 px-6 pb-2.5 pt-6 shadow-default bg-white sm:px-8 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">

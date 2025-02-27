@@ -203,6 +203,12 @@ const NewRequestBlue: React.FC = () => {
         }
     }
 
+    const checkPlan = () => {
+        if (user?.planId !== 1) {
+            alert("有料プランにアップグレードしてください。");
+            return;
+        }
+    }
     return (
         <div className="rounded-sm border border-stroke shadow-default bg-white p-4">
             <div>
@@ -340,6 +346,7 @@ const NewRequestBlue: React.FC = () => {
                 <button
                     onClick={() => {
                         if (confirmValues()) {
+                            checkPlan();
                             setIsAddModalOpen(true);
                         }
                     }}

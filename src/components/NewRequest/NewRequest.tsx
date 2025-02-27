@@ -204,6 +204,13 @@ const NewRequest: React.FC = () => {
         }
     }
 
+    const checkPlan = () => {
+        if (user?.planId !== 1) {
+            alert("有料プランにアップグレードしてください。");
+            return;
+        }
+    }
+
     // const handleCategoryCheckboxModal = () => {
     //     setIsCheckBoxModalOpen(true)
     // }
@@ -353,6 +360,7 @@ const NewRequest: React.FC = () => {
                 <button
                     onClick={() => {
                         if(confirmValues()){
+                            checkPlan();
                             setIsAddModalOpen(true);
                         }
                     }}

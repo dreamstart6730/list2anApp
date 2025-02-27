@@ -13,10 +13,11 @@ interface DetailModalProps {
   downloadFlag: boolean
   onDownloadList: () => void;
   onEdit: () => void;
+  onEditMonth: () => void;
   editFlag: boolean;
 }
 
-const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, onSave, onChangeFlag, onDelete, deleteFlag, onEdit, editFlag }) => {
+const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, onSave, onChangeFlag, onDelete, deleteFlag, onEdit, editFlag, onEditMonth }) => {
   if (!isOpen) return null;
   const [changeFlag, setChangeFlag] = useState(false);
   const handleToggleChangeFlag = (flag: boolean) => {
@@ -47,14 +48,22 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, children, on
             )}
           </div>
           <div
-            className="ml-2">
+            className="ml-2 flex justify-center">
             {editFlag && (
-              <button
-                onClick={onEdit}
-                className="bg-lime-500 text-white px-4 py-2 rounded hover:bg-lime-600 mr-12"
-              >
-                納品集計
-              </button>
+              <div className="flex justify-center">
+                <button
+                  onClick={onEdit}
+                  className="bg-lime-500 text-white px-4 py-2 rounded hover:bg-lime-600 mr-4"
+                >
+                  納品集計
+                </button>
+                <button
+                  onClick={onEditMonth}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-8"
+                >
+                  月別集計
+                </button>
+              </div>
             )}
             {deleteFlag && (
               !changeFlag ? (
