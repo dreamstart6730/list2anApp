@@ -23,7 +23,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ children, onCloseCost, on
                             }}
                             className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
                         >
-                            更新
+                            変更
                         </button>
                     ) : (
                         <button
