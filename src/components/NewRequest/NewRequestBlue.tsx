@@ -47,7 +47,7 @@ const NewRequestBlue: React.FC = () => {
     const [areaMemo, setAreaMemo] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
-    const [wishNum, setWishNum] = useState(0);
+    const [wishNum, setWishNum] = useState(-1);
     const [detailCondition, setDetailCondition] = useState("");
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
@@ -132,7 +132,7 @@ const NewRequestBlue: React.FC = () => {
             tags: tags,
             areaMemo,
         };
-        if (projectName === "" || tags.length < 1 || wishNum < 1 || Object.keys(requestData.areaSelection).length === 0) {
+        if (projectName === "" || tags.length < 1 || wishNum < 0 || Object.keys(requestData.areaSelection).length === 0) {
             alert("必須項目を入力してください。");
             return 0;
         }
@@ -172,7 +172,7 @@ const NewRequestBlue: React.FC = () => {
             areaMemo,
             completeState,
         };
-        if (projectName === "" || tags.length < 1 || wishNum < 1 || Object.keys(requestData.areaSelection).length === 0) {
+        if (projectName === "" || tags.length < 1 || wishNum < 0 || Object.keys(requestData.areaSelection).length === 0) {
             alert("必須項目を入力してください。");
             return;
         }
@@ -226,11 +226,15 @@ const NewRequestBlue: React.FC = () => {
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => {
                             let value = e.target.value;
-                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
-                            const intValue = Number(value);
-                            setWishNum(intValue);
+                            if(value === ""){
+                                setWishNum(-1);
+                            }else{
+                                value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
+                                const intValue = Number(value);
+                                setWishNum(intValue);
+                            }
                         }}
-                        value={wishNum}
+                        value={(wishNum >= 0) ? wishNum : ""}
                         required
                     />
                 </div>

@@ -66,7 +66,7 @@ const ChangeRequest: React.FC = () => {
     const [currentRequest, setCurrentRequest] = useState<RequestList | null>(null);
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
-    const [wishNum, setWishNum] = useState(0);
+    const [wishNum, setWishNum] = useState(-1);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -230,7 +230,7 @@ const ChangeRequest: React.FC = () => {
             areaSelection: selectedValues.area_condition || {},
             areaMemo,
        };
-        if(requestData.projectName === "" || (requestData?.wishNum ?? 0) < 1 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0){
+        if(requestData.projectName === "" || (requestData?.wishNum ?? -1) < 0 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0){
             alert("必須項目を入力してください。");
             return 0;
         }
@@ -271,7 +271,7 @@ const ChangeRequest: React.FC = () => {
             areaMemo,
             completeState,
         };
-        if (requestData.projectName === "" || (requestData?.wishNum ?? 0) < 1 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0) {
+        if (requestData.projectName === "" || (requestData?.wishNum ?? -1) < 0 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0) {
             alert("必須項目を入力してください。");
             return;
         }
@@ -326,14 +326,21 @@ const ChangeRequest: React.FC = () => {
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => {
                             let value = e.target.value;
-                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
-                            const intValue = Number(value);
-                            setCurrentRequest((prev) => prev ? ({
-                                ...prev,
-                                wishNum: intValue,
-                            }) : prev);
+                            if(value === ""){
+                                setCurrentRequest((prev) => prev ? ({
+                                    ...prev,
+                                        wishNum: -1,
+                                    }) : prev);
+                            } else {
+                                value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
+                                const intValue = Number(value);
+                                setCurrentRequest((prev) => prev ? ({
+                                    ...prev,
+                                        wishNum: intValue,
+                                    }) : prev);
+                            }
                         }}
-                        value={currentRequest?.wishNum || '0'}
+                        value={(currentRequest?.wishNum !== undefined && currentRequest?.wishNum >= 0) ? currentRequest.wishNum : ''}
                         required />
                 </div>
             </div>

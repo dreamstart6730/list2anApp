@@ -50,7 +50,7 @@ const NewRequest: React.FC = () => {
     const [subCondition, setSubCondition] = useState("");
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentConditon, setCurrentCondition] = useState("");
-    const [wishNum, setWishNum] = useState(0);
+    const [wishNum, setWishNum] = useState(-1);
     const router = useRouter();
 
     useEffect(() => {
@@ -132,7 +132,7 @@ const NewRequest: React.FC = () => {
             areaSelection: selectedValues.area_condition || {},
             areaMemo,
         };
-        if(projectName === "" || wishNum < 1 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0){
+        if(projectName === "" || wishNum < 0 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0){
             alert("必須項目を入力してください。");
             return 0;
         }
@@ -173,7 +173,7 @@ const NewRequest: React.FC = () => {
             areaMemo,
             completeState,
         };
-        if(projectName === "" || wishNum < 1 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0){
+        if(projectName === "" || wishNum < 0 || Object.keys(requestData.mainCondition).length === 0 || Object.keys(requestData.areaSelection).length === 0){
             alert("必須項目を入力してください。");
             return;
         }
@@ -234,11 +234,15 @@ const NewRequest: React.FC = () => {
                     <input type="text" id="project_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 border-gray-600 placeholder-gray-400 focus:ring-blue-500"
                         onChange={(e) => {
                             let value = e.target.value;
-                            value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
-                            const intValue = Number(value);
-                            setWishNum(intValue);
+                            if(value === ""){
+                                setWishNum(-1);
+                            }else{
+                                value = value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
+                                const intValue = Number(value);
+                                setWishNum(intValue);
+                            }
                         }}
-                        value={wishNum}
+                        value={(wishNum >= 0) ? wishNum : ""}
                         required
                     />
                 </div>

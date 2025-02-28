@@ -173,7 +173,7 @@ const NewRequestRed: React.FC = () => {
             return;
         }
         if (user?.planId !== 1) {
-            alert("無料リストは複数選択できません。有料リストをご利用ください。");
+            alert("有料プランにアップグレードしてください。");
             return;
         }
         try {
@@ -201,7 +201,7 @@ const NewRequestRed: React.FC = () => {
 
     const checkPlan = () => {
         if(user?.planId !== 1) {
-            alert("無料リストは複数選択できません。有料リストをご利用ください。");
+            alert("有料プランにアップグレードしてください。");
             return;
         } else {
             setIsAddModalOpen(true);
