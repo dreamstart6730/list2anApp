@@ -17,10 +17,12 @@ interface Client {
     requestCount: number;
     memo: string;
     updatedAt: Date;
+    createdAt: Date;
     user: User;
 }
 
 interface User {
+    createdAt: Date;
     id: number;
     name: string;
     email: string;
@@ -701,7 +703,7 @@ const ClientTable = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-gray-700">契約アドレス</label>
+                                        <label className="block text-gray-700">契約メールアドレス</label>
                                         <input
                                             type="text"
                                             value={selectedClient.user?.email || ""}
@@ -760,6 +762,23 @@ const ClientTable = () => {
                                                         month: "long",
                                                         day: "numeric",
                                                     }).format(new Date(selectedClient.updatedAt))
+                                                    : "N/A"
+                                            }
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">利用開始日</label>
+                                        <input
+                                            type="text"
+                                            value={
+                                                selectedClient.createdAt
+                                                    ? new Intl.DateTimeFormat("ja-JP", {
+                                                        year: "numeric",
+                                                        month: "long",
+                                                        day: "numeric",
+                                                    }).format(new Date(selectedClient.user?.createdAt))
                                                     : "N/A"
                                             }
                                             className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"

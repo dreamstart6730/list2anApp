@@ -121,7 +121,7 @@ const SignIn: React.FC = () => {
                     />
                   </div>
                   {(message)?(message):("")}
-                  <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50">
+                  {/* <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50">
                     <span>
                       <svg
                         width="20"
@@ -156,19 +156,17 @@ const SignIn: React.FC = () => {
                       </svg>
                     </span>
                     Googleでログイン
-                  </button>
+                  </button> */}
 
                   <div className="mt-6 text-center">
                     <p>
-                      アカウント新規作成の場合は？{" "}
                       <Link href="/auth/signup" className="text-primary">
-                        サインアップ
+                        新しくアカウントを作成する
                       </Link>
                     </p>
                     <p>
-                      パウダーを忘れた場合は？{" "}
                       <Link href="/auth/resetpass" className="text-primary">
-                        パスワードリセット
+                        パスワードを忘れた場合はこちら
                       </Link>
                     </p>
                   </div>
