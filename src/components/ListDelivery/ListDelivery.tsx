@@ -126,8 +126,10 @@ const ListDeliveryTable = () => {
                     ...requestsYellow,
                     // ...requestsRed,
                 ];
-
-                setRequestLists(combinedRequests);
+                const sortedRequests = combinedRequests.sort((a: RequestList, b: RequestList) => {
+                    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+                });
+                setRequestLists(sortedRequests);
                 console.log("Fetched requests:", response.data.requests);
 
             } catch (error) {

@@ -4,6 +4,9 @@ import axios from "axios";
 import Loader from "@/components/common/Loader";
 import Modal from "@/components/common/Loader/Modal";
 import DetailModal from "@/components/common/Loader/DetailModal2";
+import CategoryModal from '@/components/common/Loader/CategoryModal';
+import { jwtDecode } from "jwt-decode";
+import MonthEditModal from "@/components/common/Loader/MonthEditModal";
 
 interface Client {
     id: number;
@@ -14,16 +17,24 @@ interface Client {
     requestCount: number;
     memo: string;
     updatedAt: Date;
+    createdAt: Date;
     user: User;
 }
 
 interface User {
+    createdAt: Date;
     id: number;
     name: string;
     email: string;
     planId: number;
     contractId: string;
     requests: RequestList[];
+    requestsBlue: RequestList[];
+    requestsGreen: RequestList[];
+    requestsYellow: RequestList[];
+    requestsPink: RequestList[];
+    requestsRed: RequestList[];
+    clientCost: ClientCost;
 }
 
 interface RequestList {
@@ -43,6 +54,15 @@ interface RequestList {
     user: User;
 }
 
+interface ClientCost {
+    userId: number;
+    red_price: number;
+    blue_price: number;
+    green_price: number;
+    yellow_price: number;
+    pink_price: number;   
+}
+
 
 
 const ClientTable = () => {
@@ -58,6 +78,20 @@ const ClientTable = () => {
     const [usersWithoutContracts, setUsersWithoutContracts] = useState<User[]>([]);
     const [newUserName, setNewUserName] = useState("");
     const [newUserEmail, setNewUserEmail] = useState("");
+    const [deleveryEditModal, setDeleveryEditModal] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [clientCost, setClientCost] = useState<ClientCost | null>({
+        userId: 0,
+        red_price: -1,
+        blue_price: -1,
+        green_price: -1,
+        yellow_price: -1,
+        pink_price: -1
+    });
+    const [isCostReadOnly, setIsCostReadOnly] = useState(true);
+    const [monthTarget, setMonthTarget] = useState<Date>(new Date());
+    const [isMonthEditModalOpen, setIsMonthEditModalOpen] = useState(false);
+    const [monthData, setMonthData] = useState<any>(null);
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -119,8 +153,77 @@ const ClientTable = () => {
 
     const openDetailModal = (client: Client) => {
         setSelectedClient(client);
+        setClientCost(client?.user?.clientCost ? client.user.clientCost : {
+            userId: client.user?.id,
+            red_price: -1,
+            blue_price: -1,
+            green_price: -1,
+            yellow_price: -1,
+            pink_price: -1
+        });
         setIsDetailModalOpen(true);
     };
+
+    const handleDeleveryEdit = () => {
+        setDeleveryEditModal(true);
+    }
+
+    const handleCloseModal = () => {
+        setDeleveryEditModal(false);
+        setIsCostReadOnly(true);
+    };
+
+    const handleUpdate = async () => {
+        const token = localStorage.getItem('listan_token');
+        if (!token) return;
+        const decoded = jwtDecode(token) as { role?: number };
+
+        if (!decoded.role || decoded.role < 1) {
+            alert('管理者権限が必要です');
+            return;
+        }
+
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/update_client_cost`, 
+            clientCost,
+            {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('listan_token')}`,
+                }
+            }
+        );
+        console.log(clientCost);
+        // const response =await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/update_client_cost`, clientCost);
+        if(response.status === 200){    
+            setIsCostReadOnly(true);
+            setDeleveryEditModal(false);
+            alert("更新しました");
+        } else {
+            alert("更新に失敗しました");
+        }
+    };
+
+    const enableUpdate = () => {
+        setIsCostReadOnly(false);
+    }
+
+    const getMonthData = async (date: Date) => {
+        const monthTarget = new Date(date);
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/clients_month`, {
+            monthTarget: monthTarget,
+            userId: selectedClient?.user?.id,
+        });
+
+        const getedRequest = response.data;
+        setMonthData(getedRequest);
+        console.log(monthData);
+    }
+    const handleEditMonth = async () => {
+        console.log(monthTarget);
+        await getMonthData(monthTarget);
+        console.log(monthData);
+        setIsMonthEditModalOpen(true);
+    }
 
     if (loading) {
         return <Loader />;
@@ -148,7 +251,7 @@ const ClientTable = () => {
                                 <th className="min-w-[40px] px-4 py-4 font-medium text-black">No</th>
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">契約ID</th>
                                 <th className="min-w-[150px] px-4 py-4 font-medium text-black">クライアント名</th>
-                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">プラン</th>
+                                <th className="min-w-[150px] px-4 py-4 font-medium text-black">契約プラン</th>
                                 <th className="min-w-[120px] px-4 py-4 font-medium text-black">合計リスト数</th>
                                 <th className="px-4 py-4 font-medium text-black">合計依頼数</th>
                                 <th className="px-4 py-4 font-medium text-black">更新日</th>
@@ -157,8 +260,14 @@ const ClientTable = () => {
                         </thead>
                         <tbody>
                             {clients.map((client, index) => {
-                                const countSum = client.user?.requests?.reduce((sum, item) => sum + item.listCount, 0) || 0;
-                                const count_requset = client.user?.requests?.length
+                                const countSum =
+                                    (client.user?.requests?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                                    +(client.user?.requestsBlue?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                                    +(client.user?.requestsGreen?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                                    +(client.user?.requestsYellow?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                                    +(client.user?.requestsPink?.reduce((sum, item) => sum + item.listCount, 0) || 0);
+                                const count_request = (client.user?.requests?.length || 0) + (client.user?.requestsBlue?.length || 0) + (client.user?.requestsGreen?.length || 0) + (client.user?.requestsYellow?.length || 0) + (client.user?.requestsPink?.length || 0) + (client.user?.requestsRed?.length || 0);
+
                                 return (
                                     <tr key={client.id}>
                                         <td className="border-b border-[#eee] px-4 py-5">{index + 1}</td>
@@ -168,7 +277,7 @@ const ClientTable = () => {
                                             {(client.user?.planId == 0) ? "フリー" : "レギュラー"}
                                         </td>
                                         <td className="border-b border-[#eee] px-4 py-5">{countSum}</td>
-                                        <td className="border-b border-[#eee] px-4 py-5">{count_requset}</td>
+                                        <td className="border-b border-[#eee] px-4 py-5">{count_request}</td>
                                         <td className="border-b border-[#eee] px-4 py-5">
                                             {client.updatedAt
                                                 ? new Intl.DateTimeFormat("ja-JP", {
@@ -287,23 +396,275 @@ const ClientTable = () => {
                     </div>
                 </div>
             </Modal>
-
+            {deleveryEditModal && (
+                <CategoryModal
+                    onCloseCost={handleCloseModal}
+                    onUpdate={handleUpdate}
+                    enableUpdate={enableUpdate}
+                >
+                    {(() => {
+                        const countSum =
+                            (selectedClient?.user?.requests?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient?.user?.requestsBlue?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient?.user?.requestsGreen?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient?.user?.requestsYellow?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient?.user?.requestsPink?.reduce((sum, item) => sum + item.listCount, 0) || 0);
+                        const count_request = (selectedClient?.user?.requests?.length || 0) + (selectedClient?.user?.requestsBlue?.length || 0) + (selectedClient?.user?.requestsGreen?.length || 0) + (selectedClient?.user?.requestsYellow?.length || 0) + (selectedClient?.user?.requestsPink?.length || 0) + (selectedClient?.user?.requestsRed?.length || 0);
+                                
+                        return (
+                                    <>
+                                        <div className="max-w-full overflow-x-auto">
+                                            <table className="w-full table-auto">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="min-w-[120px] px-4 py-2 font-medium text-black"></th>
+                                                        <th className="min-w-[120px] px-4 py-2 font-medium text-black">単価</th>
+                                                        <th className="px-4 py-2 font-medium text-black">リルト数</th>
+                                                        <th className="px-4 py-2 font-medium text-black">依頼数</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <div className="bg-red-500 text-white px-4 py-2 rounded">レッド</div>
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <input type="text" 
+                                                            className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
+                                                            value={(clientCost?.red_price === undefined || clientCost?.red_price < 0) ? "お問い合わせ" : clientCost.red_price} 
+                                                            disabled = {isCostReadOnly}
+                                                            onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        red_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        red_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        red_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
+                                                            }}
+                                                            onFocus={(e) => {
+                                                                e.target.select();
+                                                            }}
+                                                            />
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            -
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsRed?.length || 0}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <div className="bg-blue-500 text-white px-4 py-2 rounded">ブルー</div>
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <input type="text" 
+                                                            className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
+                                                            value={(clientCost?.blue_price === undefined || clientCost?.blue_price < 0) ? "お問い合わせ" : clientCost.blue_price} 
+                                                            disabled = {isCostReadOnly}
+                                                            onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        blue_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        blue_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        blue_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
+                                                            }}
+                                                            onFocus={(e) => {
+                                                                e.target.select();
+                                                            }}
+                                                            />
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsBlue?.reduce((sum, item) => sum + item.listCount, 0) || 0}
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsBlue?.length || 0}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <div className="bg-green-500 text-white px-4 py-2 rounded">グリーン</div>
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <input type="text" 
+                                                            className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
+                                                            value={(clientCost?.green_price === undefined || clientCost?.green_price < 0) ? "お問い合わせ" : clientCost.green_price} 
+                                                            disabled = {isCostReadOnly}
+                                                                onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        green_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        green_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        green_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
+                                                            }}
+                                                            onFocus={(e) => {
+                                                                e.target.select();
+                                                            }}
+                                                            />
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsGreen?.reduce((sum, item) => sum + item.listCount, 0) || 0}
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsGreen?.length || 0}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <div className="bg-yellow-400 text-white px-4 py-2 rounded">イエロー</div>
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <input type="text" 
+                                                            className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
+                                                            value={(clientCost?.yellow_price === undefined || clientCost?.yellow_price < 0) ? "お問い合わせ" : clientCost.yellow_price} 
+                                                            disabled = {isCostReadOnly}
+                                                                onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        yellow_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        yellow_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        yellow_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
+                                                            }}
+                                                            onFocus={(e) => {
+                                                                e.target.select();
+                                                            }}
+                                                            />
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsYellow?.reduce((sum, item) => sum + item.listCount, 0) || 0}
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsYellow?.length || 0}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <div className="bg-pink-500 text-white px-4 py-2 rounded">ピンク</div>
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <input type="text" 
+                                                            className={`max-w-[110px] border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isCostReadOnly ? 'bg-gray-200' : 'bg-white'} text-sm`}
+                                                            value={(clientCost?.pink_price === undefined || clientCost?.pink_price < 0) ? "お問い合わせ" : clientCost.pink_price} 
+                                                            disabled = {isCostReadOnly}
+                                                                onChange={(e) => {
+                                                                if(e.target.value == '0') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        pink_price: 0
+                                                                    } : null);
+                                                                } else if (e.target.value == '') {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        pink_price: -1,
+                                                                    } : null);
+                                                                } else {
+                                                                    setClientCost(clientCost ? {
+                                                                        ...clientCost,
+                                                                        pink_price: Number(e.target.value)
+                                                                    } : null);
+                                                                }
+                                                            }}
+                                                            onFocus={(e) => {
+                                                                e.target.select();
+                                                            }}
+                                                            />
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsPink?.reduce((sum, item) => sum + item.listCount, 0) || 0}
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {selectedClient?.user?.requestsPink?.length || 0}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            <div className="px-4 py-2 rounded">合計
+                                                            </div>
+                                                        </td>
+                                                        <td></td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {countSum}
+                                                        </td>
+                                                        <td className="border-b border-[#eee] px-4 py-2 text-center">
+                                                            {count_request}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </>
+                        )
+                    })()}
+                </CategoryModal>
+            )}
             {/* Detail Modal */}
             {selectedClient && (
                 <DetailModal
                     isOpen={isDetailModalOpen}
-                    onClose={() => setIsDetailModalOpen(false)}
+                    onClose={() => {setIsDetailModalOpen(false); handleChangeFlag(false)}}
                     onSave={handleSaveSelectedClient}
                     onChangeFlag={handleChangeFlag}
                     onDelete={() => {}}
                     onDownloadList={() => {}}
                     deleteFlag= {true}
                     downloadFlag= {false}
+                    onEdit={handleDeleveryEdit}
+                    editFlag= {selectedClient.user?.planId !== 0}
+                    onEditMonth={handleEditMonth}
                 >
+
                     {(() => {
                         const countSum =
-                            selectedClient.user?.requests?.reduce((sum, item) => sum + item.listCount, 0) || 0;
-                        const count_request = selectedClient.user?.requests?.length || 0;
+                            (selectedClient.user?.requests?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient.user?.requestsBlue?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient.user?.requestsGreen?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient.user?.requestsYellow?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient.user?.requestsPink?.reduce((sum, item) => sum + item.listCount, 0) || 0)
+                            +(selectedClient.user?.requestsRed?.reduce((sum, item) => sum + item.listCount, 0) || 0);
+                        const count_request = (selectedClient.user?.requests?.length || 0) + (selectedClient.user?.requestsBlue?.length || 0) + (selectedClient.user?.requestsGreen?.length || 0) + (selectedClient.user?.requestsYellow?.length || 0) + (selectedClient.user?.requestsPink?.length || 0) + (selectedClient.user?.requestsRed?.length || 0);
 
                         return (
                             <>
@@ -319,16 +680,30 @@ const ClientTable = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-700">プラン</label>
-                                        <input
-                                            type="text"
-                                            value={(selectedClient.user?.planId == 0) ? "フリー" : "レギュラー"}
-                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
-                                            readOnly
-                                        />
+                                        <label className="block text-gray-700">契約プラン</label>
+                                        <select 
+                                            value={selectedClient.user?.planId}
+                                            className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : ""}`}
+                                            onChange={(e) => {
+                                                setSelectedClient((prev) => {
+                                                    if (!prev) return null;
+                                                    return {
+                                                        ...prev,
+                                                        user: {
+                                                            ...prev.user,
+                                                            planId: Number(e.target.value),
+                                                        }
+                                                    };
+                                                });
+                                            }}  
+                                            disabled={isReadOnly}
+                                        >
+                                            <option value={0}>フリー</option>
+                                            <option value={1}>レギュラー</option>
+                                        </select>
                                     </div>
                                     <div>
-                                        <label className="block text-gray-700">契約アドレス</label>
+                                        <label className="block text-gray-700">契約メールアドレス</label>
                                         <input
                                             type="text"
                                             value={selectedClient.user?.email || ""}
@@ -394,6 +769,23 @@ const ClientTable = () => {
                                         />
                                     </div>
                                     <div>
+                                        <label className="block text-gray-700">利用開始日</label>
+                                        <input
+                                            type="text"
+                                            value={
+                                                selectedClient.createdAt
+                                                    ? new Intl.DateTimeFormat("ja-JP", {
+                                                        year: "numeric",
+                                                        month: "long",
+                                                        day: "numeric",
+                                                    }).format(new Date(selectedClient.user?.createdAt))
+                                                    : "N/A"
+                                            }
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
                                         <label className="block text-gray-700">メモ</label>
                                         <textarea
                                             className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : ""}`}
@@ -412,7 +804,15 @@ const ClientTable = () => {
                     })()}
                 </DetailModal>
             )}
-
+            {isMonthEditModalOpen && (
+                <MonthEditModal
+                    onClose={() => setIsMonthEditModalOpen(false)}
+                    monthTarget={monthTarget}
+                    setMonthTarget={setMonthTarget}
+                    getMonthData={getMonthData}
+                    monthData={monthData}
+                />
+            )}
         </div>
     );
 };

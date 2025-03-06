@@ -102,7 +102,10 @@ const RedListDeliveryTable = () => {
                     }
                 );
                 // console.log("Response from fetching requests:", response.data);
-                setRedItems(response.data.redItems);
+                const sortedRedItems = response.data.redItems.sort((a: RedListDeliveryTableProps, b: RedListDeliveryTableProps) => {
+                    return new Date(b.updatedDate).getTime() - new Date(a.updatedDate).getTime();
+                });
+                setRedItems(sortedRedItems);
 
             } catch (error) {
                 console.log("Error fetching requests:", error);
@@ -140,7 +143,9 @@ const RedListDeliveryTable = () => {
                 alert("ファイルのアップロードが完了しました。");
                 //page reload
                 location.reload();
-            } 
+            } else {
+                alert(response.data.message);
+            }
 
         } catch (error) {
             console.error("Error uploading file:", error);

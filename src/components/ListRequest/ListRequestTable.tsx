@@ -46,6 +46,17 @@ interface User {
     name: string;
     email: string;
     contractId: string;
+    planId: number;
+    clientCost: ClientCost;
+}
+
+interface ClientCost {
+    userId: number;
+    red_price: number;
+    blue_price: number;
+    green_price: number;
+    yellow_price: number;
+    pink_price: number;   
 }
 
 interface DecodedToken {
@@ -68,6 +79,7 @@ const ListRequestTable = () => {
     const [isCheckBoxModalOpen, setIsCheckBoxModalOpen] = useState(false);
     const [currentCondition, setCurrentCondition] = useState("");
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
 
 
     const transformData = (
@@ -115,8 +127,8 @@ const ListRequestTable = () => {
                 const response = await axios.get(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/requestLists`,
                     {
-                        params: { userId }, // Pass userId as a query parameter
-                        headers: { Authorization: `Bearer ${token}` }, // Optional: Pass token in the header
+                        params: { userId },
+                        headers: { Authorization: `Bearer ${token}` },
                     }
                 );
                 const requests = response.data.requests.map((request: RequestList) => ({ ...request, category: 'グリーン' }));
@@ -131,10 +143,9 @@ const ListRequestTable = () => {
                     ...requestsPink,
                     ...requestsYellow,
                     ...requestsRed,
-                ];
+                ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
                 setRequestLists(combinedRequests);
-                console.log("Fetched clients:", response.data.requests);
             } catch (error) {
                 console.log("Error fetching clients:", error);
             } finally {
@@ -144,6 +155,18 @@ const ListRequestTable = () => {
 
         fetchRequests();
     }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem("listan_token");
+        const fetchClientCost = async () => {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/client_cost`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setUser(response.data);
+        };
+        fetchClientCost();
+    }, []);
+
     const router = useRouter();
     const handleChangeFlag = (flag: boolean) => {
         if (selectedList?.id) {
@@ -321,10 +344,12 @@ const ListRequestTable = () => {
                     },
                 });
                 const data = response.data;
+                const now = new Date();
+                const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
 
                 if (Array.isArray(data)) {
                     const csvContent = convertToCSV(data);
-                    downloadCSV(csvContent, `${selectedList.projectName || 'MyProject'}_red_list.csv`);
+                    downloadCSV(csvContent, `${selectedList.projectName || 'MyProject'}_${formattedDate}.csv`);
                 } else {
                     console.error("Unexpected response format:", data);
                     alert("ファイルのダウンロードに失敗しました。");
@@ -417,7 +442,7 @@ const ListRequestTable = () => {
                     有料リスト
                 </button>
             </div>
-            <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={() => { setIsCategoryModalOpen(false) }} />
+            <RequestCategoryModal isOpen={isCategoryModalOpen} onClose={() => { setIsCategoryModalOpen(false) }} user={user}/>
             <div className="rounded-sm border border-gray-500 mx-4 px-6 pb-2.5 pt-6 shadow-default bg-white sm:px-8 xl:pb-1">
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">

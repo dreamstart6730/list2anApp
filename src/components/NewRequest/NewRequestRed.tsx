@@ -173,7 +173,7 @@ const NewRequestRed: React.FC = () => {
             return;
         }
         if (user?.planId !== 1) {
-            alert("無料リストは複数選択できません。有料リストをご利用ください。");
+            alert("有料プランにアップグレードしてください。");
             return;
         }
         try {
@@ -196,6 +196,15 @@ const NewRequestRed: React.FC = () => {
         } catch (error) {
             console.error('Error saving request:', error);
             alert('保存中にエラーが発生しました。');
+        }
+    }
+
+    const checkPlan = () => {
+        if(user?.planId !== 1) {
+            alert("有料プランにアップグレードしてください。");
+            return;
+        } else {
+            setIsAddModalOpen(true);
         }
     }
 
@@ -308,7 +317,7 @@ const NewRequestRed: React.FC = () => {
                 <button
                     onClick={() => {
                         if(confirmValues()){
-                            setIsAddModalOpen(true);
+                            checkPlan();
                         }
                     }}
                     className="mt-4 mx-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
