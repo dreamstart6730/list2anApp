@@ -344,10 +344,12 @@ const ListRequestTable = () => {
                     },
                 });
                 const data = response.data;
+                const now = new Date();
+                const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
 
                 if (Array.isArray(data)) {
                     const csvContent = convertToCSV(data);
-                    downloadCSV(csvContent, `${selectedList.projectName || 'MyProject'}_red_list.csv`);
+                    downloadCSV(csvContent, `${selectedList.projectName || 'MyProject'}_${formattedDate}.csv`);
                 } else {
                     console.error("Unexpected response format:", data);
                     alert("ファイルのダウンロードに失敗しました。");

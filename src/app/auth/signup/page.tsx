@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 const SignupPage = () => {
+  const router = useRouter();
     const [email, setEmail] = useState('');
     const [agreed, setAgreed] = useState(false);
     const [step, setStep] = useState(1); // 1: アドレス登録, 2: メール認証, 3: 登録完了
@@ -33,15 +34,13 @@ const SignupPage = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:3000/api/auth/signup', { email });
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, { email });
+            console.log(response.status);
             if(response.status === 200){
-                const router = useRouter();
                 router.push('/auth/checkmail');
+            } else {
+                setEmailError(response.data.message);
             }
-        } catch (error) {
-            console.error('Signup failed:', error);
-        }
     };
 
     return (
