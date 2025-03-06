@@ -34,13 +34,13 @@ const SignupPage = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, { email });
-            console.log(response.status);
-            if(response.status === 200){
-                router.push('/auth/checkmail');
-            } else {
-                setEmailError(response.data.message);
-            }
+        console.log(`${process.env.NEXT_PUBLIC_API_URL}--`)
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, { email });
+        if(response.status === 200){
+            router.push('/auth/checkmail');
+        } else {
+            setEmailError(response.data.message);
+        }
     };
 
     return (
