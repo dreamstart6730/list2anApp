@@ -1,14 +1,23 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
 interface LoginResponse {
   message: string;
   token: string;
+  user: User;
 }
+
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState<string>('');
@@ -16,15 +25,24 @@ const SignIn: React.FC = () => {
   const [message, setMessage] = useState<string>('');
   const router = useRouter();
 
+  useEffect(() => {
+    localStorage.removeItem("listan_token");
+    localStorage.removeItem("user_name");
+  }, []);
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const response = await axios.post<LoginResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signin`, { email, password });
       setMessage(response.data.message);
-      localStorage.setItem('listan_token', response.data.token); // Store token in local storage
-      const decoded: { role: number } = jwtDecode(response.data.token);
-      if (decoded.role > 0) router.push("/client_management")
-      else router.push("/list_request")
+      if(response.data.user.phone === null || response.data.user.phone === ""){
+        router.push("/auth/signupcheck?email=" + email);
+      }else{
+        localStorage.setItem('listan_token', response.data.token); // Store token in local storage
+        const decoded: { role: number } = jwtDecode(response.data.token);
+        if (decoded.role > 0) router.push("/client_management")
+        else router.push("/list_request")
+      }
     } catch (error: any) {
       setMessage(error.response?.data?.message || 'An error occurred.');
     }

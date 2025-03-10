@@ -26,6 +26,7 @@ interface User {
     id: number;
     name: string;
     email: string;
+    phone: string;
     planId: number;
     contractId: string;
     requests: RequestList[];
@@ -731,6 +732,15 @@ const ClientTable = () => {
                                             }
                                             className={`w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 ${isReadOnly ? "bg-gray-200" : ""}`}
                                             readOnly={isReadOnly}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-700">連絡先電話番号</label>
+                                        <input
+                                            type="text"
+                                            value={selectedClient.user?.phone || ""}
+                                            className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-gray-500 bg-gray-200"
+                                            readOnly
                                         />
                                     </div>
                                     <div>

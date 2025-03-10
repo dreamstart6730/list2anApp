@@ -33,7 +33,7 @@ export default function ClientDefaultLayout({
           {/* <!-- ===== Content Area Start ===== --> */}
           <div className="relative flex flex-1 flex-col lg:ml-52">
             {/* <!-- ===== Header Start ===== --> */}
-            <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+            {/* <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} /> */}
             {/* <!-- ===== Header End ===== --> */}
 
             {/* <!-- ===== Main Content Start ===== --> */}
